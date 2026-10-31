@@ -31,9 +31,19 @@ void audout_thread() {
         AudioOutBuffer* released = nullptr;
         u32 count = 0;
         if (R_FAILED(audoutWaitPlayFinish(&released, &count, UINT64_MAX)) || !released) continue;
-        g_pull((int16_t*)released->buffer, kBufferFrames);
-        armDCacheFlush(released->buffer, released->buffer_size);
-        audoutAppendAudioOutBuffer(released);
+        // (this fork) the service releases every buffer that finished playing at once, chained
+        // through ->next: refill and requeue ALL of them. Refilling only the first dropped the
+        // rest permanently, so whenever two finished together (the audout thread was descheduled
+        // for a moment) the playback queue lost 21 ms of runway for good — enough of those and
+        // the ring ran dry in busy moments (heard as crackle in effect sounds, e.g. the roll).
+        for (u32 i = 0; i < count && released; ++i) {
+            AudioOutBuffer* next = released->next;
+            g_pull((int16_t*)released->buffer, kBufferFrames);
+            armDCacheFlush(released->buffer, released->buffer_size);
+            released->next = nullptr;  // appends are one buffer at a time
+            audoutAppendAudioOutBuffer(released);
+            released = next;
+        }
     }
 }
 }  // namespace
