@@ -15,6 +15,10 @@ jobs:
       VERSION: v0.5.0-zh
       ARCH: x86_64
       TOOLCHAIN: zig-0.16.0
+      SDL3_URL: https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+      SDL3_SHA256: 9c75cf16330322c217dedd2e0609f1124f1b54b8633e763467b4684d0f4334a3
+      VULKAN_HEADERS_URL: https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v1.4.363.tar.gz
+      VULKAN_HEADERS_SHA256: cbaf687d3c59b9666fe080e7f8396b6b4f4d344a768ee6b337c59852f4526b68
     steps:
       - uses: actions/checkout@v5
 
@@ -47,6 +51,22 @@ jobs:
           echo "ZBIN=$RUNNER_TEMP/zbin" >> "$GITHUB_ENV"
           echo "ZIG_GLOBAL_CACHE_DIR=$RUNNER_TEMP/zig-cache" >> "$GITHUB_ENV"
 
+      - name: SDL3 (shared, system compiler: zig's libc headers clash with liburing here)
+        run: |
+          curl -fsSL -o sdl3.tar.gz "$SDL3_URL"
+          echo "$SDL3_SHA256  sdl3.tar.gz" | sha256sum -c -
+          tar -xzf sdl3.tar.gz
+          cmake -S SDL3-3.4.18 -B sdl3-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSDL_SHARED=ON -DSDL_STATIC=OFF \
+            -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="$HOME/sdl3"
+          cmake --build sdl3-build
+          cmake --install sdl3-build
+
+      - name: Vulkan headers (pinned)
+        run: |
+          curl -fsSL -o vh.tar.gz "$VULKAN_HEADERS_URL"
+          echo "$VULKAN_HEADERS_SHA256  vh.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/vulkan" && tar -xzf vh.tar.gz -C "$HOME/vulkan" --strip-components=1
+
       - name: Build runtime (Release, Vulkan + SDL3) with placeholder guest code
         run: |
           python3 tools/recomp/stubgen.py build/gen-stub
@@ -54,13 +74,16 @@ jobs:
             -DCMAKE_C_COMPILER="$ZBIN/zcc" -DCMAKE_CXX_COMPILER="$ZBIN/zcxx" \
             -DCMAKE_AR="$ZBIN/zar" -DCMAKE_RANLIB="$ZBIN/zranlib" \
             -DGEN_DIR="$PWD/build/gen-stub" -DWWHD_BUNDLED_DEPS=ON -DWWHD_SETUP_GUI=ON \
+            -DCMAKE_PREFIX_PATH="$HOME/sdl3" -DVulkan_INCLUDE_DIR="$HOME/vulkan/include" \
             -DVulkan_LIBRARY="/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
           cmake --build build/rel
 
       - name: Package (release layout)
         run: |
           python3 tools/release/package.py --build build/rel --platform "linux-$ARCH" --version "$VERSION" \
-            --out dist --toolchain "$TOOLCHAIN" --setup-gui build/rel/wwhd-setup
+            --out dist --toolchain "$TOOLCHAIN" --setup-gui build/rel/wwhd-setup \
+            --runtime-file "$HOME/sdl3/lib/libSDL3.so.0" \
+            --linkonly-lib "/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
 
       - name: Guard (no game code, game files or keys)
         run: python3 tools/release/guard.py dist/*.zip
