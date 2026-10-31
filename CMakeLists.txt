@@ -291,6 +291,9 @@ if(WWHD_SDL_HOST)
   endif()
 endif()
 set_source_files_properties(${GX2_SOURCES} ${GFX_SOURCES} PROPERTIES COMPILE_OPTIONS "-include;${CEMU_DIR}/cemu_shim.h")
+# (this fork) zh_tr.cpp is self-contained and also compiles inside the imgui library (CMakeLists above),
+# which has no fmt include path: it must not force-include the cemu shim
+set_source_files_properties(runtime/src/platform/zh_tr.cpp PROPERTIES COMPILE_OPTIONS "")
 set_source_files_properties(runtime/src/gfx/vulkan/pipeline_recipe.cpp PROPERTIES COMPILE_OPTIONS "")
 set_source_files_properties(runtime/src/gfx/vulkan/pass_cache.cpp PROPERTIES COMPILE_OPTIONS "")
 set_source_files_properties(runtime/src/gfx/vulkan/pipeline_demand.cpp PROPERTIES COMPILE_OPTIONS "")
