@@ -6,6 +6,7 @@
 #include <switch.h>
 
 #include "debug_switch.h"
+#include "core_switch.h"  // (this fork) crash_log_open: the crash handler's own descriptor
 #include "startup_checks_switch.h"
 #include "prepare_graphics_switch.h"
 #include "overlay_switch.h"
@@ -93,6 +94,8 @@ static void crash_report(const char* kind, uint64_t pc, uint64_t lr, uint64_t sp
             put("\n");
         }
     }
+    log_crash_write(buf, n);  // (this fork) the essentials are on the card now; the scans below read memory
+    n = 0;                    // the fault may have left unmapped, and losing only them loses little
     put("[crash] fp %llx\n", (unsigned long long)fp);
     // the stack the thread was on: frame-pointer chain, then every word that is a code address
     MemoryInfo st{};
@@ -132,6 +135,16 @@ void __libnx_exception_handler(ThreadExceptionDump* ctx) {
                        : ec == 0x00 ? "undefined instruction" : "other";
     char kind[128];
     snprintf(kind, sizeof kind, "CPU exception: %s (desc 0x%x, esr 0x%08x)", what, ctx->error_desc, ctx->esr);
+    // (this fork) the essentials go out FIRST, before crash_report's scans (which read memory the fault may
+    // have left unmapped): one line with esr and the pc/lr/fault-address offsets against the module base.
+    // Everything in crash_report that runs after this can then lose only the second half of the report.
+    char first[224];
+    const uint64_t base0 = host::executable_base();
+    snprintf(first, sizeof first, "[crash] %s; pc +0x%llx, lr +0x%llx, fault 0x%llx\n", kind,
+             (unsigned long long)(ctx->pc.x - base0), (unsigned long long)(ctx->lr.x - base0),
+             (unsigned long long)ctx->far.x);
+    log_crash_write(first, strlen(first));
+    svcOutputDebugString(first, (int)strlen(first));  // the kernel's channel too (no file system involved)
     crash_report(kind, ctx->pc.x, ctx->lr.x, ctx->sp.x, ctx->fp.x, ctx->far.x, ctx);
 }
 // abort() from anywhere in the NRO (Mesa included: -Wl,--wrap=abort) raises svcBreak, which the exception
@@ -301,6 +314,8 @@ void main_switch::start() {
     start_session_logs(t, logName, sizeof logName);
     if (!freopen(logName, "w", stderr)) freopen("wwhd.log", "w", stderr);  // (logs/ not writable)
     setvbuf(stderr, nullptr, _IOLBF, 0);
+    crash_log_open();  // (this fork) logs/crash_latest.txt: the crash handler writes there too, in case
+                       // the session log's own file state is what the exception left broken
     // the debug server (Switch tab > Debug, saved): first, so its log text has the whole session
     debug_switch::start();  // (platform/debug_switch.h)
     LOG("[session] %04d-%02d-%02d %02d:%02d:%02d (build %s %s); log %s (the newest 10 sessions are kept in logs/)",
