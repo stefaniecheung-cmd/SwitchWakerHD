@@ -149,9 +149,9 @@ def shader_cache(src, game):
     if template:
         # the template's states with the dump's programs: a manifest as the console writes it, then as below
         recorded = os.path.join(work, "template_manifest.bin")
-        run([sys.executable, "-I", script, "from-template", src, game, recorded, programs])
+        run([sys.executable, script, "from-template", src, game, recorded, programs])
         src = recorded
-    run([sys.executable, "-I", script, "speculate", src, game, m, programs])
+    run([sys.executable, script, "speculate", src, game, m, programs])
     # (2: a few variants failed: speculative ones whose guessed state does not fit their program)
     run(tool + ["translate", m, programs, gl], env=env, ok=(0, 2))
     run(tool + ["build", gl, out, SHADER_CODE_MIB], env=env, ok=(0, 2))
@@ -207,7 +207,7 @@ def extract(image):
     dst = os.path.join(ROOT, "build", "sd-game")
     tmp = dst + ".partial"
     shutil.rmtree(tmp, ignore_errors=True)
-    run([sys.executable, "-I", os.path.join(ROOT, "tools", "wudextract.py"), image, "extract", tmp])
+    run([sys.executable, os.path.join(ROOT, "tools", "wudextract.py"), image, "extract", tmp])
     if not setup.valid_game_folder(tmp):
         fail("the extracted files are incomplete (no code/cking.rpx, content/ or meta/meta.xml)")
     shutil.rmtree(dst, ignore_errors=True)
@@ -223,7 +223,7 @@ def extract_wua(archive):
     dst = os.path.join(ROOT, "build", "sd-game")
     tmp = dst + ".partial"
     shutil.rmtree(tmp, ignore_errors=True)
-    run([sys.executable, "-I", os.path.join(ROOT, "tools", "wuaextract.py"), archive, "extract", tmp])
+    run([sys.executable, os.path.join(ROOT, "tools", "wuaextract.py"), archive, "extract", tmp])
     if not setup.valid_game_folder(tmp):
         fail("the extracted files are incomplete (no code/cking.rpx, content/ or meta/meta.xml)")
     shutil.rmtree(dst, ignore_errors=True)
@@ -241,7 +241,7 @@ def forwarder(args, out, icon=None):
               "prod.keys there (or use --keys PATH, outside this folder), then run: python "
               "tools/switch/forwarder/build_forwarder_windows.py --sd \"%s\"" % (keys, out))
     else:
-        cmd = [sys.executable, "-I", os.path.join(ROOT, "tools", "switch", "forwarder",
+        cmd = [sys.executable, os.path.join(ROOT, "tools", "switch", "forwarder",
                                                   "build_forwarder_windows.py"),
                "--keys", keys, "--sd", out]
         if icon:
@@ -285,7 +285,7 @@ def main():
     # a mod's .zip or folder, or a catalogue id (guest_mods.py downloads it)
     mods = [os.path.abspath(p) if os.path.exists(p) else p for p in args.guest_mod]
     if args.guest_mod:  # what would stop the mods' step, found before the slow ones (the disc, its Python)
-        run([sys.executable, "-I", os.path.join(ROOT, "tools", "switch", "guest_mods.py"), "--check"] +
+        run([sys.executable, os.path.join(ROOT, "tools", "switch", "guest_mods.py"), "--check"] +
             mods +
             (["--gc-game", os.path.abspath(args.gc_game)] if args.gc_game else []))
     elif args.mod_option or args.gc_game:
@@ -335,7 +335,7 @@ def main():
     # code mods built into the NRO (docs/guest-mods-switch-plan.md): prepared and translated first, since the game
     # code gets their check in the functions they hook; without --guest-mod an earlier set is removed
     mods_dir = os.path.join(ROOT, "build", "guest-mods")
-    tool = [sys.executable, "-I", os.path.join(ROOT, "tools", "switch", "guest_mods.py"), "--out", mods_dir]
+    tool = [sys.executable, os.path.join(ROOT, "tools", "switch", "guest_mods.py"), "--out", mods_dir]
     renv = dict(os.environ)
     if args.guest_mod:
         run(tool + mods + ["--build", build.name] +
@@ -348,7 +348,7 @@ def main():
     if os.path.islink(gen):
         fail("build/gen is a symbolic link: remove it (or run from a checkout without one)")
     shutil.rmtree(gen, ignore_errors=True)
-    run([sys.executable, "-I", os.path.join(ROOT, "tools", "recomp", "recomp.py"), os.path.join(game, "code", "cking.rpx"), gen],
+    run([sys.executable, os.path.join(ROOT, "tools", "recomp", "recomp.py"), os.path.join(game, "code", "cking.rpx"), gen],
         env=renv)
 
     step(4, "building the Switch homebrew (10-20 minutes the first time)")

@@ -143,6 +143,9 @@ add_library(imgui STATIC ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IM
             ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo/ImGuizmo.cpp)
 target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo)
 target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+# (this fork) Chinese interface: IMGUI_ZH_TR (third_party/imgui/imconfig.h) sends ImGui's texts and widget
+# labels through runtime/src/platform/zh_tr.cpp on every platform
+target_compile_definitions(imgui PUBLIC WWHD_ZH_UI=1)
 target_compile_options(imgui PRIVATE -w -O2)
 switch_port_libraries()  # (this fork) cmake/SwitchPort.cmake: uam, deko3d and the Switch's library options
 
@@ -210,6 +213,11 @@ if(NOT WWHD_EDITOR_MCP OR ANDROID)
   list(REMOVE_ITEM RUNTIME_SOURCES ${CMAKE_SOURCE_DIR}/runtime/src/editor/mcp.cpp ${CMAKE_SOURCE_DIR}/runtime/src/editor/mcp_server.cpp)
 endif()
 list(APPEND RUNTIME_SOURCES runtime/src/platform/perf_hint.cpp runtime/src/platform/thread_sampler.cpp)  # Android performance hints (no-op elsewhere)
+if(NOT WWHD_SWITCH)
+  # (this fork) the Chinese interface's lookup (runtime/src/platform/zh_tr.cpp, zh_table.inc); the Switch
+  # build adds it in cmake/SwitchPort.cmake
+  list(APPEND RUNTIME_SOURCES runtime/src/platform/zh_tr.cpp)
+endif()
 list(APPEND RUNTIME_SOURCES ${WWHD_BUILD_INFO})
 list(APPEND RUNTIME_SOURCES ${WWHD_NPC_CATALOGUE})
 # the Delivery Bag's extra pages: their layout description (tools/story_mods/make_bag_page_layout.py), compiled in

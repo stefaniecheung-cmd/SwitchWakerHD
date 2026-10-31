@@ -215,7 +215,7 @@ cd "$(cygpath -u "$HBP")" && cp config.mk.template config.mk && (make -s >/dev/n
     run([sys.executable, "-I", os.path.join(fdir, "make_nacp.py"), os.path.join(pack, "control", "control.nacp"),
          "--title-id", TITLE_ID, "--name", NAME, "--author", PUBLISHER, "--version", version])
     icon = os.path.join(out, "icon.jpg")
-    run([sys.executable, "-I", os.path.join(fdir, "make_icon.py"), icon_src, icon])
+    run([sys.executable, os.path.join(fdir, "make_icon.py"), icon_src, icon])  # no -I: Pillow lives in the user site-packages on this machine
     for lang in LANGS:
         shutil.copyfile(icon, os.path.join(pack, "control", "icon_%s.dat" % lang))
 

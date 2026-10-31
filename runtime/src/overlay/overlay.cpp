@@ -28,6 +28,9 @@
 #include "widgets.h"
 #include "gamepad_nav.h"
 #include "perf_average.h"
+#ifdef WWHD_ZH_UI
+#include "../platform/zh_tr.h"  // (this fork) the Chinese interface's table
+#endif
 #ifdef __ANDROID__
 #include "android_telemetry.h"
 #include <SDL3/SDL_system.h>
@@ -315,6 +318,38 @@ void setup_style() {
 void setup_fonts() {
     ImGuiIO& io = ImGui::GetIO();
     if (const ext::FontLoader& load = ext::font_loader(); load && load(io)) return;  // the platform's (extensions.h)
+#ifdef WWHD_ZH_UI
+    // (this fork) the Chinese interface: a system CJK font first (zh_table.inc needs the glyphs); the Latin
+    // fonts below have none, so the texts would come out as boxes. WWHD_UI_EN=1 keeps the English interface.
+    if (!wwhd_zh_forced_english()) {
+        static const char* const cjk[] = {
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/source-han-sans/SourceHanSansSC-Regular.otf",
+            "/usr/share/fonts/opentype/adobe-source-han-sans/SourceHanSansSC-Regular.otf",
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "/usr/share/fonts/wenquanyi/wqy-microhei/wqy-microhei.ttc",
+            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+            "/usr/share/fonts/truetype/arphic/uming.ttc",
+        };
+        ImFontConfig cfg;
+        cfg.FontNo = 0;  // a .ttc: its first face
+        cfg.GlyphRanges = io.Fonts->GetGlyphRangesChineseFull();
+        for (const char* path : cjk) {
+            if (FILE* f = fopen(path, "rb")) {
+                fclose(f);
+                if (io.Fonts->AddFontFromFileTTF(path, 17.0f, &cfg)) {
+                    LOG("[overlay] font %s (Chinese)", path);
+                    return;
+                }
+            }
+        }
+        LOG("[overlay] no CJK font found: install fonts-noto-cjk (the Chinese texts need one)");
+    }
+#endif
     static const char* const candidates[] = {
 #if defined(__APPLE__)
         "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",

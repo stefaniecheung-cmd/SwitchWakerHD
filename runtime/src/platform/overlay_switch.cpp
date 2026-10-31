@@ -671,17 +671,25 @@ void tab_developer() {
 }
 
 bool load_font(ImGuiIO& io) {
-    // the console's own font (shared font service), kept by the system: the atlas does not own it
+    // the console's own fonts (shared font service), kept by the system: the atlas does not own them.
+    // This build's interface is Chinese, so the Chinese shared font is loaded too (merge mode: it fills
+    // in the glyphs the standard one has not), and ImGui's dynamic atlas rasterizes each glyph on demand.
     if (R_SUCCEEDED(plInitialize(PlServiceType_User))) {
-        PlFontData font;
-        if (R_SUCCEEDED(plGetSharedFontByType(&font, PlSharedFontType_Standard))) {
+        const PlSharedFontType kOrder[] = {PlSharedFontType_Standard, PlSharedFontType_ChineseSimplified,
+                                           PlSharedFontType_ExtChineseSimplified, PlSharedFontType_ChineseTraditional};
+        int added = 0;
+        for (const PlSharedFontType type : kOrder) {
+            PlFontData font;
+            if (R_FAILED(plGetSharedFontByType(&font, type))) continue;
             ImFontConfig cfg;
             cfg.FontDataOwnedByAtlas = false;
+            cfg.MergeMode = added > 0;
             if (io.Fonts->AddFontFromMemoryTTF(font.address, int(font.size), 17.0f, &cfg)) {
-                LOG("[overlay] font: the system's shared font");
-                return true;
+                LOG("[overlay] font: shared font type %d", int(type));
+                added++;
             }
         }
+        if (added) return true;
     }
     return false;
 }

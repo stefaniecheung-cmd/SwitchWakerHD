@@ -148,3 +148,14 @@ namespace ImGui
     void MyFunction(const char* name, MyMatrix44* mtx);
 }
 */
+
+//---- (this fork) Chinese UI texts
+// WWHD_ZH_UI (Switch build only) routes ImGui's own texts and widget labels through the runtime's
+// table (runtime/src/platform/zh_tr.cpp), so the settings overlay can be Chinese without touching
+// every call site. Undefined elsewhere: IMGUI_ZH_TR() is then the string itself.
+#ifdef WWHD_ZH_UI
+extern const char* wwhd_zh_tr(const char* s);
+#define IMGUI_ZH_TR(s) (::wwhd_zh_tr(s))
+#else
+#define IMGUI_ZH_TR(s) (s)
+#endif

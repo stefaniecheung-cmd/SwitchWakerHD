@@ -1,0 +1,73 @@
+# Chinese-interface Linux build (this fork): the same runtime the v0.5.0 release ships, built from this
+# branch with WWHD_ZH_UI (runtime/src/platform/zh_tr.cpp + zh_table.inc) and the CJK font loader in
+# runtime/src/overlay/overlay.cpp, packaged as a Linux x86_64 AppImage.
+# Started only by hand (Actions tab, "Run workflow"). No game files are used: the game code comes from
+# tools/recomp/stubgen.py, as in linux.yml.
+name: zh-linux-appimage
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      VERSION: v0.5.0-zh
+      ARCH: x86_64
+      TOOLCHAIN: zig-0.16.0
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config xz-utils file libcurl4-openssl-dev \
+            libvulkan1 libasound2-dev libpulse-dev libaudio-dev libfribidi-dev libjack-dev libsndio-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
+            libxtst-dev libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev wayland-protocols \
+            mesa-vulkan-drivers xvfb python3-pil
+
+      - name: Build runtime (Release, Vulkan + SDL3) with placeholder guest code
+        run: |
+          python3 tools/recomp/stubgen.py build/gen-stub
+          cmake -S . -B build/rel -G Ninja -DCMAKE_BUILD_TYPE=Release -DWWHD_VERSION="$VERSION" \
+            -DGEN_DIR="$PWD/build/gen-stub" -DWWHD_BUNDLED_DEPS=ON -DWWHD_SETUP_GUI=ON \
+            -DVulkan_LIBRARY="/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
+          cmake --build build/rel
+
+      - name: Package (release layout)
+        run: |
+          python3 tools/release/package.py --build build/rel --platform "linux-$ARCH" --version "$VERSION" \
+            --out dist --toolchain "$TOOLCHAIN" --setup-gui build/rel/wwhd-setup
+
+      - name: Guard (no game code, game files or keys)
+        run: python3 tools/release/guard.py dist/*.zip
+
+      - name: AppImage
+        run: |
+          python3 tools/release/appimage.py dist/WindWakerHD-*/ --out dist
+          ls -la dist
+
+      - name: Unpack and look for the Chinese texts
+        run: |
+          APP=$(ls dist/*.AppImage | head -1)
+          echo "APP=$APP"
+          (cd "$RUNNER_TEMP" && "$GITHUB_WORKSPACE/$APP" --appimage-extract >/dev/null)
+          BIN=$(find "$RUNNER_TEMP/squashfs-root" -maxdepth 3 -name 'wind-waker-hd' -type f | head -1)
+          echo "BIN=$BIN"
+          python3 - "$BIN" <<'PY'
+          import sys
+          data = open(sys.argv[1], 'rb').read()
+          zh = data.count('的'.encode()) + data.count('设'.encode()) + data.count('存'.encode())
+          print('bytes:', len(data), 'chinese markers:', zh)
+          assert zh > 50, 'the Chinese table does not seem to be in the binary'
+          print('ok')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zh-appimage
+          path: dist/*
+          retention-days: 7

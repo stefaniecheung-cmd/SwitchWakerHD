@@ -3,6 +3,8 @@
 // only afterwards.
 #include "extensions.h"
 
+#include "../platform/zh_tr.h"  // (this fork) Chinese tab labels
+
 #include <algorithm>
 #include <atomic>
 #include <cstdio>
@@ -36,7 +38,7 @@ void make_tabs() {
     for (int i = 0; i < kBuiltinCount; i++) {
         ShownTab t;
         t.id = kBuiltinTabs[i].id;
-        t.name = kBuiltinTabs[i].name;
+        t.name = WWHD_ZH(kBuiltinTabs[i].name);
         t.builtin = i;
         g_tabs.push_back(std::move(t));
     }
@@ -53,6 +55,10 @@ int find(const std::string& id) {
 void add_tab(Tab tab, const char* before_id) {
     if (too_late("add_tab")) return;
     make_tabs();
+    {  // (this fork) the tab's label in this build's interface language
+        const std::string translated = WWHD_ZH(tab.name.c_str());
+        tab.name = translated;
+    }
     if (tab.id.empty() || find(tab.id) >= 0) {
         fprintf(stderr, "[overlay] add_tab: the tab id \"%s\" is empty or taken; not added\n", tab.id.c_str());
         return;
