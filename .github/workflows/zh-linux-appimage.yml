@@ -51,7 +51,7 @@ jobs:
           echo "ZBIN=$RUNNER_TEMP/zbin" >> "$GITHUB_ENV"
           echo "ZIG_GLOBAL_CACHE_DIR=$RUNNER_TEMP/zig-cache" >> "$GITHUB_ENV"
 
-      - name: SDL3 (shared, system compiler: zig's libc headers clash with liburing)
+      - name: "SDL3 (shared library, built with the system compiler; zig's libc headers clash with liburing)"
         run: |
           curl -fsSL -o sdl3.tar.gz "$SDL3_URL"
           echo "$SDL3_SHA256  sdl3.tar.gz" | sha256sum -c -
