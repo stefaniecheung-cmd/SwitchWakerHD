@@ -26,9 +26,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential clang cmake ninja-build pkg-config xz-utils file libcurl4-openssl-dev \
-            libvulkan1 libvulkan-dev glslang-dev glslang-tools libasound2-dev libpulse-dev libaudio-dev libfribidi-dev libjack-dev libsndio-dev \
-            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
-            libxtst-dev libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libvulkan1 libvulkan-dev glslang-dev glslang-tools libasound2-dev libpulse-dev libaudio-dev libfribidi-dev \
+            libjack-dev libsndio-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev \
+            libxss-dev libxtst-dev libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
             libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
             libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev wayland-protocols \
             mesa-vulkan-drivers xvfb python3-pil
@@ -51,13 +51,12 @@ jobs:
           echo "ZBIN=$RUNNER_TEMP/zbin" >> "$GITHUB_ENV"
           echo "ZIG_GLOBAL_CACHE_DIR=$RUNNER_TEMP/zig-cache" >> "$GITHUB_ENV"
 
-      - name: SDL3 (shared, system compiler: zig's libc headers clash with liburing here)
+      - name: SDL3 (shared, system compiler: zig's libc headers clash with liburing)
         run: |
           curl -fsSL -o sdl3.tar.gz "$SDL3_URL"
           echo "$SDL3_SHA256  sdl3.tar.gz" | sha256sum -c -
           tar -xzf sdl3.tar.gz
-          cmake -S SDL3-3.4.18 -B sdl3-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSDL_SHARED=ON -DSDL_STATIC=OFF \
-            -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="$HOME/sdl3"
+          cmake -S SDL3-3.4.18 -B sdl3-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="$HOME/sdl3"
           cmake --build sdl3-build
           cmake --install sdl3-build
 
