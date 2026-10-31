@@ -2506,6 +2506,9 @@ void quit_row(bool& open) {
     // Closing from HOME goes through the same host loop without that teardown and is clean, so the
     // menu quit now ends the process the same instant way. Settings are saved as they are made,
     // and nothing else needs releasing on the way out.
+    log_flush();  // (this fork) the batched queue: LOG above (and any line of the last 250 ms) must reach
+                  // the card even though _Exit skips the writer thread; this disambiguates a post-mortem
+                  // log ending at "asking" (crash while the dialog was open) from a clean exit
     fflush(stderr);
     std::_Exit(0);
 #else
