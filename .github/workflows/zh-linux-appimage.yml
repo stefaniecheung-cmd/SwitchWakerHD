@@ -29,11 +29,30 @@ jobs:
             libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev wayland-protocols \
             mesa-vulkan-drivers xvfb python3-pil
 
+      - name: Pinned zig toolchain (tools/installer/toolchains.json)
+        run: |
+          read -r URL SUM DIR TARGET < <(python3 -c "
+          import json, os; t=json.load(open('tools/installer/toolchains.json'))['toolchains'][os.environ['TOOLCHAIN']]
+          print(t['url'], t['sha256'], t['dir'], t['target'])")
+          curl -fsSL -o "$RUNNER_TEMP/zig.tar.xz" "$URL"
+          echo "$SUM  $RUNNER_TEMP/zig.tar.xz" | sha256sum -c -
+          tar -xf "$RUNNER_TEMP/zig.tar.xz" -C "$RUNNER_TEMP"
+          ZIG="$RUNNER_TEMP/$DIR/zig"
+          mkdir -p "$RUNNER_TEMP/zbin"
+          printf '#!/bin/sh\nexec "%s" cc -target %s "$@"\n' "$ZIG" "$TARGET" > "$RUNNER_TEMP/zbin/zcc"
+          printf '#!/bin/sh\nexec "%s" c++ -target %s "$@"\n' "$ZIG" "$TARGET" > "$RUNNER_TEMP/zbin/zcxx"
+          printf '#!/bin/sh\nexec "%s" ar "$@"\n' "$ZIG" > "$RUNNER_TEMP/zbin/zar"
+          printf '#!/bin/sh\nexec "%s" ranlib "$@"\n' "$ZIG" > "$RUNNER_TEMP/zbin/zranlib"
+          chmod +x "$RUNNER_TEMP"/zbin/*
+          echo "ZBIN=$RUNNER_TEMP/zbin" >> "$GITHUB_ENV"
+          echo "ZIG_GLOBAL_CACHE_DIR=$RUNNER_TEMP/zig-cache" >> "$GITHUB_ENV"
+
       - name: Build runtime (Release, Vulkan + SDL3) with placeholder guest code
         run: |
           python3 tools/recomp/stubgen.py build/gen-stub
           cmake -S . -B build/rel -G Ninja -DCMAKE_BUILD_TYPE=Release -DWWHD_VERSION="$VERSION" \
-            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER="$ZBIN/zcc" -DCMAKE_CXX_COMPILER="$ZBIN/zcxx" \
+            -DCMAKE_AR="$ZBIN/zar" -DCMAKE_RANLIB="$ZBIN/zranlib" \
             -DGEN_DIR="$PWD/build/gen-stub" -DWWHD_BUNDLED_DEPS=ON -DWWHD_SETUP_GUI=ON \
             -DVulkan_LIBRARY="/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
           cmake --build build/rel
