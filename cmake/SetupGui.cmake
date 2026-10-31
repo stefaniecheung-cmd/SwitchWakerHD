@@ -31,7 +31,6 @@ endif()
 
 add_executable(wwhd-setup WIN32
   tools/installer/gui/setup_gui.cpp
-  runtime/src/platform/zh_tr.cpp  # IMGUI_ZH_TR is a PUBLIC define on imgui: the setup gui needs it too
   ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
   ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp)
 target_include_directories(wwhd-setup PRIVATE ${IMGUI_DIR} ${IMGUI_DIR}/backends)

@@ -1,4 +1,6 @@
 #include <stdarg.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "dk_device.h"
 
 using namespace dk::detail;
@@ -241,11 +243,19 @@ void dk::detail::WarningMsg(const char* fmt, ...)
 
 #else
 
+// (this fork) the release library's errors used to reach diagAbortWithResult: a raw svcBreak, the
+// system's "software closed because an error occurred" screen (result 2359-xxxx), with the log's
+// pending lines lost. Log the result straight to stderr (the session log) and exit cleanly instead.
 void dk::detail::RaiseError(DkResult result)
 {
-	diagAbortWithResult(MAKERESULT(359, result));
+	if (const int fd = fileno(stderr); fd >= 0)
+	{
+		char msg[96];
+		const int n = snprintf(msg, sizeof msg, "[dk] deko3d fatal error (DkResult %d); exiting cleanly\n", (int)result);
+		if (n > 0) { (void)!write(fd, msg, (size_t)n); fsync(fd); }
+	}
+	_exit(0);
 }
-
 #endif
 
 void* ObjBase::allocMem(size_t size, size_t alignment) const noexcept

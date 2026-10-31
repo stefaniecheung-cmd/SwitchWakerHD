@@ -143,6 +143,7 @@ bool g_shaderOk[kShaderCount] = {};
 DkShader g_presentShaders[2];  // the present pass of the game's picture (vertex, fragment)
 bool g_presentOk = false;
 std::atomic<int> g_debugMessages{0};
+std::atomic<bool> g_shuttingDown{false};  // (this fork) the host loop has ended: the render thread parks (swap)
 
 // deko3d's messages. Only the debug library (libdeko3dd, WWHD_DEKO3D_DEBUG_LIB) calls this: its checks of
 // every call, warnings (result DkResult_Success) and errors, after which it traps. The release library calls
@@ -1404,6 +1405,14 @@ void check_hitch(uint64_t now) {
 }
 
 void swap() {
+    if (g_shuttingDown.load(std::memory_order_acquire) || debug_switch::quit_requested()) {
+        // (this fork) Quit Game (or the HOME menu's exit): the host loop has ended or is ending and
+        // _Exit follows within milliseconds. Touching the display here is unsafe — a failed
+        // nwindowDequeueBuffer makes deko3d's release library abort with result 2359-0001 (the
+        // system's "software closed" screen; seen when quitting from the settings menu). Park until
+        // _Exit ends the process.
+        for (;;) svcSleepThread(10'000'000ll);
+    }
     const uint64_t start = now_ns();
     check_hitch(start);
     present();
@@ -1545,6 +1554,7 @@ void run_main_loop() {
         switch_settings::tick();  // CPU / GPU clock overrides set again when the system changed them
         std::this_thread::sleep_for(std::chrono::milliseconds(4));
     }
+    g_shuttingDown.store(true, std::memory_order_release);  // (this fork) the render thread parks before it
     input::stop_rumble();
     LOG("[boot] host loop ended at frame %llu", (unsigned long long)std::atomic_ref<uint64_t>(R.frame).load());
     fflush(stderr);

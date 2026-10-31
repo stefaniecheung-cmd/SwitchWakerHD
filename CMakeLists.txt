@@ -139,9 +139,14 @@ target_compile_options(cemu_latte PRIVATE -w -O2)
 # ---- Dear ImGui (MIT, runtime/third_party/imgui, pinned release): the in-game settings overlay
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/runtime/third_party/imgui)
 # ImGuizmo (MIT, runtime/third_party/imguizmo, pinned commit): the world editor's move and turn handles
+# (this fork) zh_tr.cpp is compiled into the library itself: IMGUI_ZH_TR (imconfig.h) makes imgui's
+# objects call wwhd_zh_tr, and every target that links imgui (the setup gui, the editor tests...) gets
+# the definition with it
 add_library(imgui STATIC ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp
-            ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo/ImGuizmo.cpp)
+            ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo/ImGuizmo.cpp
+            ${CMAKE_SOURCE_DIR}/runtime/src/platform/zh_tr.cpp)
 target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo)
+target_include_directories(imgui PRIVATE ${CMAKE_SOURCE_DIR}/runtime/src/platform)
 target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 # (this fork) Chinese interface: IMGUI_ZH_TR (third_party/imgui/imconfig.h) sends ImGui's texts and widget
 # labels through runtime/src/platform/zh_tr.cpp on every platform
