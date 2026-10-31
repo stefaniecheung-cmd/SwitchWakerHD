@@ -31,6 +31,10 @@
 #ifdef WWHD_ZH_UI
 #include "../platform/zh_tr.h"  // (this fork) the Chinese interface's table
 #endif
+
+#ifdef __SWITCH__
+#include <switch.h>  // (this fork) svcExitProcess: the atomic process exit
+#endif
 #ifdef __ANDROID__
 #include "android_telemetry.h"
 #include <SDL3/SDL_system.h>
@@ -2510,7 +2514,13 @@ void quit_row(bool& open) {
                   // the card even though _Exit skips the writer thread; this disambiguates a post-mortem
                   // log ending at "asking" (crash while the dialog was open) from a clean exit
     fflush(stderr);
-    std::_Exit(0);
+    // (this fork) svcExitProcess, not std::_Exit: libnx's _exit is NOT atomic — it runs __appExit first,
+    // tearing hid/audout/vi/fsdev down service by service while every other thread keeps executing, and
+    // whichever touches a torn-down service dies (padUpdate 2345-0008 in run_main_loop, deko3d "failed to
+    // dequeue buffer" 2359-0001 in swap, fsdev races in the log writer — all one family, symbolized from
+    // the Atmosphere reports 01793485060/01793483087/01793475540). The kernel call ends every thread the
+    // same instant, with result 0: the same clean exit the system itself performs on a HOME close.
+    svcExitProcess();
 #else
     // posted: the settings changes posted before (each one saved as it is made) are done first
     hostui::post([] { hostui::quit(); });
