@@ -1558,7 +1558,12 @@ void run_main_loop() {
     input::stop_rumble();
     LOG("[boot] host loop ended at frame %llu", (unsigned long long)std::atomic_ref<uint64_t>(R.frame).load());
     fflush(stderr);
-    std::_Exit(0);
+    // (this fork) svcExitProcess, not std::_Exit: libnx's _exit runs __appExit first (hid/audout/vi/fsdev
+    // torn down service by service) while the other threads still execute — the overlay's menu quit and
+    // this HOME path both exit through here, and a racing padUpdate/deko3d swap/fsdev write is what the
+    // system reports as "software was closed". The kernel call is atomic: every thread dies the same
+    // instant, result 0, no error screen.
+    svcExitProcess();
 }
 
 }  // namespace
