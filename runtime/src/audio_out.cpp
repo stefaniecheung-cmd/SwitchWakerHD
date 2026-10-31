@@ -38,7 +38,7 @@ constexpr int kCapacity = 1 << 15;  // frames (~680 ms)
 // 80 ms on the Switch, where a frame now and then takes 60-100 ms, 40 ms elsewhere.
 const int kTarget = [] {
 #ifdef __SWITCH__
-    int ms = 80;
+    int ms = 120;  // (this fork) frames now and then take 60-100 ms: 80 ms queued was heard as crackle
 #else
     int ms = 40;
 #endif
