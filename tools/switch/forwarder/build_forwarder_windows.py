@@ -56,7 +56,7 @@ ENV = read_env(os.path.join(FDIR, "forwarder.env"))
 # the same override as build_forwarder.sh
 TITLE_ID = re.sub(r"^0[xX]", "", os.environ.get("WWHD_FORWARDER_TITLE_ID", ENV["TITLE_ID"])).lower()
 NRO_PATH = "sdmc:/switch/wwhd/wwhd.nro"
-NAME, PUBLISHER = "Wind Waker HD", "SwitchWakerHD"
+NAME, PUBLISHER = "Switch Wind Waker HD", "stefanie"
 HBLOADER = (ENV["HBLOADER_URL"], ENV["HBLOADER_COMMIT"])
 HACBREWPACK = (ENV["HACBREWPACK_URL"], ENV["HACBREWPACK_COMMIT"])
 LANGS = ["AmericanEnglish", "BritishEnglish", "Japanese", "French", "German", "LatinAmericanSpanish", "Spanish",
