@@ -2497,8 +2497,21 @@ void quit_row(bool& open) {
         return;
     }
     LOG("[quit] answer: Quit");
+#ifdef __SWITCH__
+    // (this fork) Exit right here, atomically, on this thread. The posted hostui::quit() path
+    // first tears the debug server down (socketExit() in debugsrv::stop) while the game's guest
+    // threads are still executing, and the window until _Exit let one of them die with an
+    // Instruction Abort at the module base (system's "software was closed", 2168-0001; symbolized
+    // from the Atmosphere report: a guest thread, just out of a nanosleep, jumped to base+0).
+    // Closing from HOME goes through the same host loop without that teardown and is clean, so the
+    // menu quit now ends the process the same instant way. Settings are saved as they are made,
+    // and nothing else needs releasing on the way out.
+    fflush(stderr);
+    std::_Exit(0);
+#else
     // posted: the settings changes posted before (each one saved as it is made) are done first
     hostui::post([] { hostui::quit(); });
+#endif
 }
 
 void settings_window() {
