@@ -3,6 +3,7 @@
 #include "core_switch.h"
 
 #include <switch.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -77,13 +78,20 @@ __attribute__((constructor(101))) static void log_sink_install() { log_set_sink(
 
 // From the CPU exception handler (main_switch.cpp): the pending lines and then text, written straight to the
 // files' descriptors. Nothing waits for a lock: the thread that crashed may hold the log's or stdio's.
+// (this fork) The text also goes to logs/crash_latest.txt through its own descriptor: if the session log's
+// file state is what the exception left broken (it can be, when the fault is inside the fsdev/SD write path),
+// the second file is another chance, and both are fsynced so neither waits for the writer thread's flush.
+static int g_crash_fd = -1;
+void crash_log_open() { g_crash_fd = open("logs/crash_latest.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666); }
+
 void log_crash_write(const char* text, size_t n) {
     std::string out;
     if (g_pending_mutex.try_lock()) {
         out.swap(g_log_pending);
         g_pending_mutex.unlock();
     }
-    if (const int fd = fileno(stderr); fd >= 0) {
+    for (const int fd : {fileno(stderr), g_crash_fd}) {
+        if (fd < 0) continue;
         if (!out.empty()) (void)!write(fd, out.data(), out.size());
         (void)!write(fd, text, n);
         fsync(fd);
