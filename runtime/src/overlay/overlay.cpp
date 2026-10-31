@@ -335,15 +335,21 @@ void setup_fonts() {
             "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
             "/usr/share/fonts/truetype/arphic/uming.ttc",
         };
-        ImFontConfig cfg;
-        cfg.FontNo = 0;  // a .ttc: its first face
-        cfg.GlyphRanges = io.Fonts->GetGlyphRangesChineseFull();
+        ImFontConfig cfg;  // 1.92 rasterizes glyphs on demand: no GlyphRanges needed
         for (const char* path : cjk) {
             if (FILE* f = fopen(path, "rb")) {
                 fclose(f);
-                if (io.Fonts->AddFontFromFileTTF(path, 17.0f, &cfg)) {
-                    LOG("[overlay] font %s (Chinese)", path);
-                    return;
+                // a .ttc holds several faces (Noto Sans CJK: JP, KR, SC, TC...): try the simplified Chinese
+                // one (2) first, then the first face
+                const size_t n = std::strlen(path);
+                const bool ttc = n > 4 && std::strcmp(path + n - 4, ".ttc") == 0;
+                for (int face = ttc ? 2 : 0; face >= 0; face -= 2) {
+                    cfg.FontNo = face;
+                    if (io.Fonts->AddFontFromFileTTF(path, 17.0f, &cfg)) {
+                        LOG("[overlay] font %s (Chinese, face %d)", path, face);
+                        return;
+                    }
+                    if (!ttc) break;
                 }
             }
         }
