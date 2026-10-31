@@ -6,3 +6,8 @@
 namespace core_switch {
 void init_memory();  // mem::init(): back the guest ranges in a reserved 4 GiB code-memory window
 }  // namespace core_switch
+
+// (this fork) opens logs/crash_latest.txt for the crash handler's own descriptor (main_switch.cpp calls
+// it right after the session log's freopen; log_crash_write below writes every crash text to both files)
+void crash_log_open();
+void log_crash_write(const char* text, size_t n);  // also used directly by the exception handler
