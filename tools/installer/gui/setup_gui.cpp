@@ -552,6 +552,34 @@ static const ImVec4 MUTED(0.42f, 0.45f, 0.50f, 1.0f);
 
 static void load_fonts(float scale) {
     ImGuiIO& io = ImGui::GetIO();
+#ifdef WWHD_ZH_UI
+    // (this fork) the Chinese interface: a system CJK font first, or the texts come out as boxes
+    {
+        static const char* const cjk[] = {
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+            "/usr/share/fonts/opentype/source-han-sans/SourceHanSansSC-Regular.otf",
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "/usr/share/fonts/wenquanyi/wqy-microhei/wqy-microhei.ttc",
+            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+        };
+        ImFontConfig cfg;  // 1.92 rasterizes glyphs on demand: no GlyphRanges needed
+        for (const char* c : cjk) {
+            SDL_PathInfo info;
+            if (!SDL_GetPathInfo(c, &info) || info.type != SDL_PATHTYPE_FILE) continue;
+            const size_t n = std::strlen(c);
+            const bool ttc = n > 4 && std::strcmp(c + n - 4, ".ttc") == 0;
+            for (int face = ttc ? 2 : 0; face >= 0; face -= 2) {
+                cfg.FontNo = face;
+                g_font = io.Fonts->AddFontFromFileTTF(c, 17.0f, &cfg);
+                if (g_font) return;
+                if (!ttc) break;
+            }
+        }
+    }
+#endif
     const char* candidates[] = {
 #if defined(__APPLE__)
         "/System/Library/Fonts/SFNS.ttf", "/System/Library/Fonts/Helvetica.ttc", "/Library/Fonts/Arial.ttf",
