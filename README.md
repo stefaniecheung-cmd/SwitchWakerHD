@@ -149,10 +149,13 @@ and copy the files.
 
 ### Start the game
 
-- Open the Homebrew Menu **in title mode**: hold **R** while starting any installed game, then pick
-  **SwitchWakerHD**. Opened from the album (applet mode) the game has far too little memory.
-- Or install the HOME-screen icon (forwarder), which always starts it in title mode:
-  [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md).
+> **⚠️ 必须从 forwarder（HOME 屏图标）启动游戏。** 这是唯一受支持的方式。从 hbmenu / Sphaira 直接运行
+> `wwhd.nro`（按住 **R** 进入 title mode，或从相册进入 applet mode）会在退出时崩溃并弹出「软件已关闭」
+> 错误窗口（0xD401）。请先安装 forwarder 并从 HOME 屏图标启动：
+> [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md)。
+
+- Install the HOME-screen icon (forwarder) and start the game from its icon on the HOME screen. It always
+  starts the game in title mode with full memory.
 - Controllers act as the Wii U GamePad, in Off-TV Play: the console's screen shows the game at full
   resolution, and its touch screen is the GamePad's. The game goes straight from the title to the save
   list (no controller question) and into play.

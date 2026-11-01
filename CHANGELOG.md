@@ -5,6 +5,24 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.1.6（本 fork · 简体中文版）
+
+> 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
+> 上游的英文 Changelog 见下文各版本小节。
+
+- **修复：退出游戏时崩溃并弹出「软件已关闭」窗口。** 经多轮崩溃报告定位，根因是退出路径上残留线程、
+  code-memory 卸载竞争以及一个 `PreUnloadDll` 诊断 break 三者叠加，最终在 Sphaira 内嵌 hbl 的卸载/重载阶段
+  触发 `InvalidMemoryState (0xD401)`。现已清理退出流程（冻结线程、归还 4 GiB code-memory 窗口与 reservation、
+  移除诊断 break），并确认：**游戏必须通过 forwarder（HOME 屏图标）启动**，退出时才能干净回到 HOME 菜单。
+  直接从 hbmenu / Sphaira 启动仍会崩溃，这是 Sphaira 内嵌 hbl 的固有行为，无法从游戏侧绕过。
+- **启动方式变更（强制要求）：改用 forwarder 启动。** forwarder 以 application 类型启动游戏，退出时直接
+  `svcExitProcess()` 回 HOME，不重载任何 NRO、不弹窗。请安装 `wwhd_forwarder.nsp` 并从 HOME 屏图标启动；安装
+  步骤见 [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md)。文档（INSTALL.md、README.md）
+  已把 forwarder 从「可选」改为「必需」。
+- **移除 hd-minimap 内置模组。** 该模组缺少地图美术资源（依赖游戏的「布局美术服务」），导致高清小地图无法
+  显示；已从内置模组中移除，仅保留 gc-minimap（GameCube 风格小地图）。
+- **简体中文界面。** Switch 与桌面端的界面文字、设置菜单均已中文化。
+
 ## Next update
 
 - **Meta Quest: a floating theater** (#259, thanks to the contributor). On a Quest the game shows on a flat or
