@@ -83,6 +83,7 @@ inline void start() {
         state() = {true, "Exporting the shader template..."};
     }
     std::thread([] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
         std::string line;
         try {
             std::vector<std::string> python;

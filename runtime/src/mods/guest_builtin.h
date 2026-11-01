@@ -33,6 +33,8 @@ struct Option {
 struct Mod {
     std::string id, name, version, description;
     std::string status;   // "" running, else why not (load()'s error)
+    bool enabled = true;  // (this fork) the on/off switch below: mods that draw the same thing (the two
+                          // minimaps) would otherwise both run, one on top of the other
     std::vector<Option> options;
     bool changed = false; // an option was saved since the start
 };

@@ -100,6 +100,7 @@ void set_status(const std::string& s) {
 }
 
 void sampler_main(void*) {
+    host::pause_register();  // (this fork v5) the orderly shutdown pauses this thread like every other one
     const int n = g_count.load();
     char path[96];
     snprintf(path, sizeof path, "logs/prof_%llu.samples", (unsigned long long)(armGetSystemTick() / 19200000));

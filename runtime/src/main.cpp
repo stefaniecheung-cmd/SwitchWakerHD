@@ -18,6 +18,7 @@
 #include "mods/guest_mods.h"
 #include "mods/code_mods.h"
 #include "platform/host.h"
+#include "platform/debug_switch.h"  // (this fork v3) the game's own exit goes through the host loop
 #include "platform/appimage_notice.h"
 #include "savestate.h"
 #ifdef _WIN32
@@ -685,9 +686,17 @@ int main(int argc, char** argv) {
     static LoadedModule mod = m;
     static uint32_t args = argv_arr;
     std::thread([] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
         threads::run_main(mod, 1, args);
         LOG("[boot] game main thread returned");
+#ifdef __SWITCH__
+        // (this fork v3) was std::exit(0): __appExit ran on this thread while the host loop kept
+        // running against it (padUpdate during hidExit — the crash family). The soft request ends
+        // the host loop, and run_main_loop's shutdown pauses everything before the services close.
+        debug_switch::request_quit_soft();
+#else
         std::exit(0);
+#endif
     }).detach();
     render::run_main_loop();
     return 0;

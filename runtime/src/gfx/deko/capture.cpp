@@ -5,6 +5,7 @@
 #include <zlib.h>
 
 #include <switch.h>
+#include "../../platform/host.h"  // (this fork v3) pause_register: the orderly shutdown's thread registry
 
 #include <algorithm>
 #include <atomic>
@@ -440,6 +441,7 @@ void log_capture_done(uint64_t frame) {  // (g_jobMutex held)
 }
 
 void worker_main(void*) {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
     // cores 0 and 2, core 0 first: the render thread holds core 2 (pinned there, gx2_core.cpp) and, alone on it at
     // this priority, the writer took 15-18 s per picture in Outset's heavy views
     svcSetThreadCoreMask(CUR_THREAD_HANDLE, 0, 0x5);

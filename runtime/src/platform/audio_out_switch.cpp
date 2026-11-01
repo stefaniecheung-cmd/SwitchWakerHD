@@ -17,6 +17,7 @@ void (*g_pull)(int16_t*, uint32_t) = nullptr;
 // audout plays 48 kHz stereo s16 natively: a thread keeps four page-aligned buffers queued
 constexpr uint32_t kBufferFrames = 1024;
 void audout_thread() {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
     host::raise_thread_priority();
     AudioOutBuffer bufs[4]{};
     for (auto& b : bufs) {

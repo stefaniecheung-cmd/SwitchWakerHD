@@ -708,7 +708,19 @@ void svc_hud_register(Cpu* c) {
 }
 void svc_hud_texture(Cpu* c) {
     auto& mod=owner(c);uint32_t source=c->r[3];auto path=hud_path(mod,c->r[4]);c->r[3]=0;
-    if(source>1||path.empty()){hud::store().note(mod.id,"HUD PNG load failed: invalid source or path");return;}
+    if(source>1||path.empty()){
+        // (this fork) source 2 is WWHD_HUD_GAME, the game layout art service of newer ports
+        // (queries such as "layout-texture:..."). This port reads no art out of the game's layout
+        // archives, so a mod that draws with them (hd-minimap) loads its own package icons and nothing
+        // else: say why instead of "invalid source", which reads like a broken path.
+        if(source==2&&!path.empty()){
+            static bool once=false;
+            if(!once){once=true;LOG("[guestmods] %s asks for the game's layout art (WWHD_HUD_GAME): this port has "
+                                   "no such service, so its maps have no pictures",mod.id.c_str());}
+            hud::store().note(mod.id,"No map art: this port cannot read the game's layout art (the mod needs a newer SDK)");
+            return;
+        }
+        hud::store().note(mod.id,"HUD PNG load failed: invalid source or path");return;}
     // Package textures are deliberately restricted to the two artwork folders.
     if(source==0&&!path.starts_with("assets/")&&!path.starts_with("textures/")){hud::store().note(mod.id,"HUD PNG load failed: package images must be in assets/ or textures/");return;}
     try {

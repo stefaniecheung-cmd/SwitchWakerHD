@@ -3,6 +3,7 @@
 // on Install / Update only. No ImGui: tested by runtime/tools/mods_model_test.cpp.
 #pragma once
 #include "../mods/catalogue_client.h"
+#include "../platform/host.h"  // (this fork v3) pause_register
 #include "mods_model.h"
 #include <cstdio>
 #include <filesystem>
@@ -86,6 +87,7 @@ private:
         snapshot_.checking = true;
         ++fetches_;
         thread_ = std::thread([this, source, work, fetch] {
+            host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
             mods::catalogue::Loaded result;
             std::string error;
             try {

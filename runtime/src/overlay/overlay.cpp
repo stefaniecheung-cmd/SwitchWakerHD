@@ -2502,25 +2502,21 @@ void quit_row(bool& open) {
     }
     LOG("[quit] answer: Quit");
 #ifdef __SWITCH__
-    // (this fork) Exit right here, atomically, on this thread. The posted hostui::quit() path
-    // first tears the debug server down (socketExit() in debugsrv::stop) while the game's guest
-    // threads are still executing, and the window until _Exit let one of them die with an
-    // Instruction Abort at the module base (system's "software was closed", 2168-0001; symbolized
-    // from the Atmosphere report: a guest thread, just out of a nanosleep, jumped to base+0).
-    // Closing from HOME goes through the same host loop without that teardown and is clean, so the
-    // menu quit now ends the process the same instant way. Settings are saved as they are made,
-    // and nothing else needs releasing on the way out.
-    log_flush();  // (this fork) the batched queue: LOG above (and any line of the last 250 ms) must reach
-                  // the card even though _Exit skips the writer thread; this disambiguates a post-mortem
-                  // log ending at "asking" (crash while the dialog was open) from a clean exit
+    // (this fork v3) the host loop ends and run_main_loop performs the orderly shutdown: every
+    // other thread paused (svcSetThreadActivity), then std::_Exit — __appExit closes the services
+    // with nothing running against them, and libnx jumps back into hbmenu's stack. THAT is the
+    // exit homebrew is designed for (envGetExitFuncPtr, crt0's return path): the process stays
+    // alive and the system shows no error. The two earlier attempts both failed:
+    //   - std::_Exit right here (before the pause): __appExit tore hid/audout/vi/fsdev down under
+    //     the still-running threads — padUpdate 2345-0008, deko3d swap 2359-0001, fsdev races.
+    //   - svcExitProcess: atomic, but it KILLS hbmenu's own process (the NRO runs inside it); a
+    //     self-dead applet is reported as "software was closed" even with result 0 — the log ended
+    //     cleanly and no crash report existed, yet the dialog appeared (07:25/07:46 sessions).
+    log_flush();  // the batched queue: LOG above (and any line of the last 250 ms) must reach the
+                  // card before the writer thread is paused
     fflush(stderr);
-    // (this fork) svcExitProcess, not std::_Exit: libnx's _exit is NOT atomic — it runs __appExit first,
-    // tearing hid/audout/vi/fsdev down service by service while every other thread keeps executing, and
-    // whichever touches a torn-down service dies (padUpdate 2345-0008 in run_main_loop, deko3d "failed to
-    // dequeue buffer" 2359-0001 in swap, fsdev races in the log writer — all one family, symbolized from
-    // the Atmosphere reports 01793485060/01793483087/01793475540). The kernel call ends every thread the
-    // same instant, with result 0: the same clean exit the system itself performs on a HOME close.
-    svcExitProcess();
+    hostui::quit();  // the loop's condition sees it within a frame; the render thread (this one)
+                     // parks at its next swap and everything else is paused in the shutdown
 #else
     // posted: the settings changes posted before (each one saved as it is made) are done first
     hostui::post([] { hostui::quit(); });

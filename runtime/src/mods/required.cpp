@@ -1,5 +1,6 @@
 // Required packages (required.h).
 #include "required.h"
+#include "../platform/host.h"  // (this fork v3) pause_register
 #include "packages.h"
 #include "mods.h"
 #include <cstdio>
@@ -104,7 +105,10 @@ void install_in_background(const Context& c) {
         if (g_status.working) return;
         g_status.working = true;
     }
-    std::thread([c] { install(c); }).detach();
+    std::thread([c] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
+        install(c);
+    }).detach();
 }
 
 Status status() {

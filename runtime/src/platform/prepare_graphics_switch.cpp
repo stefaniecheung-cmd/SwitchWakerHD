@@ -392,8 +392,12 @@ std::string start() {
     g_stop = false;
     g_running = true;
     console_quiet(true);
-    std::thread(watch_stop_button).detach();
     std::thread([] {
+        host::pause_register();  // (this fork v5)
+        watch_stop_button();
+    }).detach();
+    std::thread([] {
+        host::pause_register();  // (this fork v5)
         sweep();
         g_running = false;
     }).detach();

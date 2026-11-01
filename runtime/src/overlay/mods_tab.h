@@ -27,6 +27,7 @@
 #include "../mods/packages.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "../platform/zh_tr.h"  // (this fork) the model's std::string texts through the zh table
 #include "popup.h"
 #include <algorithm>
 #include <atomic>
@@ -146,15 +147,15 @@ inline const char* check_mark() { return glyph(0x2713, "\xE2\x9C\x93", "OK"); }
 inline const char* cross_mark() { return glyph(0x2717, "\xE2\x9C\x97", "x"); }
 inline const ImVec4 kMuted(0.70f, 0.78f, 0.84f, 1.0f), kGood(0.55f, 0.95f, 0.70f, 1.0f), kWarn(1.0f, 0.80f, 0.35f, 1.0f),
     kBad(1.0f, 0.50f, 0.45f, 1.0f), kAccent(0.55f, 0.95f, 0.85f, 1.0f);
-inline void text(const std::string& s) { ImGui::TextWrapped("%s", s.c_str()); }
+inline void text(const std::string& s) { ImGui::TextWrapped("%s", WWHD_ZH(s.c_str())); }
 inline void colored(const ImVec4& c, const std::string& s) {
     ImGui::PushStyleColor(ImGuiCol_Text, c);
-    ImGui::TextWrapped("%s", s.c_str());
+    ImGui::TextWrapped("%s", WWHD_ZH(s.c_str()));
     ImGui::PopStyleColor();
 }
 inline void muted(const std::string& s) { colored(kMuted, s); }
 inline void tooltip(const std::string& s) {
-    if (!s.empty() && overlay::tooltip_hovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("%s", s.c_str());
+    if (!s.empty() && overlay::tooltip_hovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("%s", WWHD_ZH(s.c_str()));
 }
 // Put the next item on this line when it fits, else on the next one (narrow windows, phones).
 inline void same_line_if_fits(const char* next_label) {
@@ -447,6 +448,7 @@ inline void start_download(const Host& h) {
     auto port = h.port_version;
     auto build = h.build_name;
     j.worker = std::thread([entry, fixtures, fetch, port, build] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
         auto& j = state().job;
         std::string error, id;
         try {
@@ -977,7 +979,7 @@ inline void row_line(const std::string& id, const std::string& name, const Row& 
     if (selectable(label.c_str())) open_page(id, builtin);
     state().rects["open_" + id] = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
     if (experimental) badge("Experimental", experimental::kBadgeColour);
-    std::string status = r.text + (note.empty() ? "" : " · " + note);
+    std::string status = std::string(WWHD_ZH(r.text.c_str())) + (note.empty() ? "" : " · " + note);
     colored(status_colour(r.status), status);
     if (!r.switch_enabled && !r.switch_reason.empty()) muted(r.switch_reason);
     ImGui::PopID();
@@ -1008,7 +1010,7 @@ inline void builtin_list(Host& h) {
         fx.enabled = e.enabled();
         Row r = row(fx);
         std::string id = e.id;
-        row_line(id, e.name, r, e.restart_required ? "applies after a restart" : "", false, true,
+        row_line(id, WWHD_ZH(e.name), r, e.restart_required ? WWHD_ZH("applies after a restart") : "", false, true,
                  [id, &h](bool on) {
                      hostui::post([id, on] { mods::manager::set_enabled(id, on); });
                      // the story system comes with its required package: switching it on installs that
@@ -1305,7 +1307,7 @@ inline void package_page(Host& h, const mods::packages::View& v) {
     if (section("Details")) {
         ImGui::Indent();
         muted("Version " + v.version);
-        if (!v.author.empty()) muted("By " + v.author);
+        if (!v.author.empty()) muted(std::string(WWHD_ZH("By ")) + v.author);
         muted(kind_words(v.kind));
         if (v.kind == "native" || v.kind == "guest" || !v.setup_tools.empty())
             muted(v.native_confirmed ? "Contains code that runs on your computer. You allowed this version."
@@ -1319,7 +1321,7 @@ inline void package_page(Host& h, const mods::packages::View& v) {
     troubleshooting(h, v, p);
 }
 inline void builtin_page(Host& h, const mods::manager::Entry& e) {
-    ImGui::TextUnformatted(e.name);
+    ImGui::TextUnformatted(WWHD_ZH(e.name));  // (this fork) translate the built-in mod's name
     bool on = e.enabled();
     std::string id = e.id;
     if (on_switch("##on_builtin", &on)) {
@@ -1382,7 +1384,7 @@ inline void available_page(Host& h, const mods::catalogue::Entry& e, const fs::p
     if (section("Details")) {
         ImGui::Indent();
         muted("Version " + e.version);
-        for (const auto& a : e.authors) muted("By " + a);
+        for (const auto& a : e.authors) muted(std::string(WWHD_ZH("By ")) + a);
         for (const auto& l : e.licences) muted("Licence: " + l);
         muted(kind_words(e.kind));
         bool code = e.kind == "guest" || e.kind == "native" ||

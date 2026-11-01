@@ -209,8 +209,10 @@ static void core_acquire(HostThread* t) {
     if (!g_sched_on || t->holds_core) return;
     static std::once_flag tick;
     std::call_once(tick, [] {
-        std::thread(sched_tick_thread).detach();
-        if (getenv("WWHD_WATCH_MEM")) std::thread(mem_watch_thread).detach();
+        // (this fork v5) registered like every other host thread: a scheduler tick that outlives the
+        // NRO runs our unmapped code when the loader takes over
+        std::thread([] { host::pause_register(); sched_tick_thread(); }).detach();
+        if (getenv("WWHD_WATCH_MEM")) std::thread([] { host::pause_register(); mem_watch_thread(); }).detach();
     });
     uint32_t core = t->core;
     CoreSched& k = g_sched[core];
@@ -873,6 +875,7 @@ static void* thread_main(void* p) {
 #endif
 #ifdef __SWITCH__
     ht->nx = threadGetCurHandle();
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses every guest thread (fsdev!)
 #endif
     // keep guest threads on performance cores (see host::boost_thread_priority): the default QoS
     // let macOS park them on efficiency cores, which showed up as the main thread holding its core
@@ -988,7 +991,7 @@ void init(const LoadedModule& m) {
     // debug: WWHD_THREAD_DUMP=s logs every guest thread's state (running/parked, wait object, lr) every s seconds
     if (const char* e = getenv("WWHD_THREAD_DUMP")) {
         int s = atoi(e);
-        std::thread([s] { thread_dump_loop(s); }).detach();
+        std::thread([s] { host::pause_register(); thread_dump_loop(s); }).detach();
     }
 }
 

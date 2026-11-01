@@ -1,5 +1,6 @@
 // SwitchWakerHD (this fork): the update notice (update_notice_switch.h).
 #include "update_notice_switch.h"
+#include "host.h"  // (this fork v5) pause_register
 
 #include <switch.h>
 
@@ -146,6 +147,7 @@ bool https_get(std::string& out, std::string& why) {
 }
 
 void* check_thread(void*) {
+    host::pause_register();  // (this fork v5) this one runs while the menu is up and outlived the NRO
     std::string current = build::version();
     if (const char* e = getenv("WWHD_UPDATE_VERSION"); e && *e) current = e;
     {

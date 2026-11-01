@@ -22,6 +22,7 @@
 //                                                 caller's frame (restore: and undo it)
 //   WWHD_DECOMP_FRAMES=0                          no native frames (frames.cpp)
 #include "decomp/decomp.h"
+#include "../platform/host.h"  // (this fork v3) pause_register
 
 #include <algorithm>
 #include <atomic>
@@ -234,6 +235,7 @@ void init() {
         g_norig.reset(new std::atomic<uint64_t>[kNumSlots]());
         static std::string path = p;
         std::thread([] {
+            host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
             for (;;) {
                 std::this_thread::sleep_for(std::chrono::seconds(2));
                 write_stats(path);

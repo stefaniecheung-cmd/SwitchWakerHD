@@ -15,6 +15,7 @@
 // queue every 2 s, opening and closing the file each time (a file the game holds open cannot be fetched on the
 // console, and nothing touches the SD card from the render thread).
 #include "shader_manifest.h"
+#include "../../platform/host.h"  // (this fork v3) pause_register
 
 #include <zlib.h>
 
@@ -64,6 +65,7 @@ template <class T> void put(std::vector<uint8_t>& b, const T& v) {
 
 // the writer thread: reads the file once (its records' hashes and keys), then appends the queue every 2 s
 void writer() {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread;
     std::unordered_set<uint64_t> seen;  // hashes of the records' data in the file
     std::vector<uint8_t> data;
     if (FILE* f = fopen(kPath, "rb")) {

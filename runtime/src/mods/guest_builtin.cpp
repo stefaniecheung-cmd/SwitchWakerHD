@@ -27,6 +27,15 @@ namespace guestbuiltin {
 
 static std::map<std::string, std::string> g_status;  // load()'s outcome per mod: "" loaded
 
+// (this fork) the on/off switch the Mods tab shows first in each mod: options.json's own key, so it sits
+// with the mod's other choices. Built-in mods were all installed unconditionally, and the two minimaps
+// draw in the same corner: picking one means turning the other off. Absent = on (as before).
+static const char kEnabledKey[] = "$enabled";
+static bool enabled_in(const mods::json::Value& options) {
+    const mods::json::Value& v = options.get(kEnabledKey);
+    return v.type != mods::json::Value::Bool || v.boolean;
+}
+
 static std::string read_file(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
     return in ? std::string{std::istreambuf_iterator<char>(in), {}} : std::string();
@@ -96,6 +105,11 @@ void load(const Install& install) {
                 dir.c_str());
         }
         std::string error;
+        if (!enabled_in(pkg.options)) {  // (this fork) off in the Mods tab: not installed at all
+            LOG("[guestmods] %s: off in options.json, not loaded", b->id);
+            g_status[b->id] = "";
+            continue;
+        }
         if (!install(pkg, b->base, b->region_size, b->init, error)) {
             LOG("[guestmods] %s %s (built into the NRO) not loaded: %s", b->id, b->version, error.c_str());
             g_status[b->id] = error.empty() ? "not loaded" : error;
@@ -128,6 +142,21 @@ std::vector<Mod>& list() {
             values = mods::json::parse(read_file(dir + "/options.json"));
         } catch (const std::exception&) {}
         m.description = man.get("description").string();
+        {   // (this fork) the on/off switch, first in the list: two mods that draw the same thing (the
+            // minimaps) would otherwise both run, one on top of the other
+            Option on;
+            on.id = kEnabledKey;
+            on.name = "Enabled";
+            on.type = "bool";
+            on.value = values.get(kEnabledKey);
+            if (on.value.type != mods::json::Value::Bool) {
+                on.value.type = mods::json::Value::Bool;
+                on.value.boolean = true;  // absent: on, as the mods always were
+            }
+            m.enabled = on.value.boolean;
+            if (!m.enabled) m.status.clear();  // off on purpose, not "not loaded"
+            m.options.push_back(std::move(on));
+        }
         for (const auto& o : man.get("options").array) {
             Option op;
             op.id = o.get("id").string();
