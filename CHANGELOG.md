@@ -5,6 +5,16 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.2.2（本 fork · Linux/AppImage 构建修复）
+
+> 本小节记录 `zh-desktop` 分支修复 SteamOS AppImage 构建失败的问题（不影响已发布的 Switch NRO v1.2.1）。
+
+- **修复 AppImage 构建失败（链接错误）。** 上游 #322 让 `runtime/src/hle/fs.cpp` 调用 `os_time::from_unix`
+  / `os_time::repair_save_stamp`（定义于 `runtime/src/hle/os_time.cpp`），但 `mod_content_fs_test` 与
+  `language_source_test` 两个测试目标编译 `fs.cpp` 时未把 `os_time.cpp` 加入源列表，导致链接报
+  `undefined symbol`。已在 `CMakeLists.txt` 中将 `runtime/src/hle/os_time.cpp` 补入这两个目标。
+- **主程序 `wwhd` 不受影响。** 该符号缺失仅存在于测试目标，本次修复使完整构建（含 AppImage 打包）通过。
+
 ## v1.2.1（本 fork · 上游同步 + 中文化补齐）
 
 > 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
