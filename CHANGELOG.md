@@ -5,6 +5,20 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.2.1（本 fork · 上游同步 + 中文化补齐）
+
+> 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
+> 本版本把上游 `centollOS/SwitchWakerHD` 的最新改动合并进中文分支，并补齐新功能的中文翻译。
+
+- **同步上游（15 个提交）。** 合并 `main`（已 fast-forward 到上游 `225a0de`）进 `zh-desktop`：
+  - **视频录制**：用截图键录制最近 30 秒视频片段，默认关闭（#38）。
+  - **存档日期**：`OSGetTime` 作为日历时钟，修复存档日期显示（#100/#322）。
+  - **自动存档**：默认开启、独立线程写文件、「已自动存档」提示（#92）。
+  - **Overlay 滑块**：按住实时生效、松手保存，修复滑块死锁（#101）。
+- **中文化补齐（zh_table.inc 新增 11 条）。** 为新功能补上简体中文：视频片段 8 条
+  （标题、录制说明、HOME 菜单提示、不支持提示等）+ 自动存档 3 条（「已自动存档」提示、说明、默认关闭提示）。
+- **冲突解决。** `CMakeLists.txt` 合并冲突已解决：保留中文化 5 处改动，并纳入上游新增的 `os_time_test` 测试目标。
+
 ## v1.2.0（本 fork · 分支重组与维护）
 
 > 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
