@@ -5,6 +5,20 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.2.0（本 fork · 分支重组与维护）
+
+> 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
+> 本版本无游戏代码变更，是一次分支结构整理与文档补充。
+
+- **分支重组。** `main` 现严格跟踪上游 `centollOS/SwitchWakerHD`（此前混入 3 个 fork 自有的
+  `zh-linux-appimage` CI 提交，已回退；该工作流文件保留在 `zh-desktop` 中，未丢失）。`zh-desktop`
+  作为长期维护分支，承载中文化、Switch 退出修复与发布；上游更新时 `main` fast-forward，再 merge 进
+  `zh-desktop`，冲突仅限 fork 自有文件。
+- **补齐上游 remote。** 新增 `upstream`（`centollOS/SwitchWakerHD`）与可选的 `upstream-desktop`
+  （`ZeldaWWHDRecomp`），并在此分支链路上加入维护文档说明。
+- **文档补充。** README 新增「Branches and maintenance」章节，说明分支结构、三级 fork 谱系
+  （ZeldaWWHDRecomp → centollOS/SwitchWakerHD → 本 fork）与上游同步流程。
+
 ## v1.1.6（本 fork · 简体中文版）
 
 > 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
