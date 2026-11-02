@@ -7,9 +7,23 @@ name: zh-linux-appimage
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_only:
+        description: "Only publish an existing build artifact to a Release (skip the build)"
+        required: false
+        default: "false"
+      artifact_run_id:
+        description: "Run id that produced the zh-appimage artifact (publish_only)"
+        required: false
+        default: ""
+      release_tag:
+        description: "Release tag to attach the AppImage + zip to (publish_only)"
+        required: false
+        default: ""
 
 jobs:
   build:
+    if: ${{ inputs.publish_only != 'true' }}
     runs-on: ubuntu-22.04
     env:
       VERSION: v0.5.0-zh
@@ -113,3 +127,35 @@ jobs:
           name: zh-appimage
           path: dist/*
           retention-days: 7
+
+  # Copies an existing build artifact into a Release's assets so it can be downloaded
+  # directly from the Releases page (artifacts themselves expire and never show there).
+  # Dispatch with publish_only=true, artifact_run_id=<run that built zh-appimage>,
+  # release_tag=<e.g. v1.2.1>.
+  publish:
+    if: ${{ inputs.publish_only == 'true' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Download the artifact from the build run
+        run: |
+          gh run download "${{ inputs.artifact_run_id }}" -R "$REPO" -n zh-appimage -D out
+          echo "--- files ---"
+          find out -maxdepth 2 -type f -printf '%s\t%p\n' | sort -k2
+
+      - name: Attach the AppImage and zip to the release
+        run: |
+          TAG="${{ inputs.release_tag }}"
+          gh release view "$TAG" -R "$REPO" >/dev/null
+          find out -maxdepth 2 -type f \( -name '*.AppImage' -o -name '*.zip' \) -print0 \
+            | while IFS= read -r -d '' f; do
+                echo "uploading: $f"
+                gh release upload "$TAG" "$f" -R "$REPO" --clobber
+              done
+          echo "--- release assets now ---"
+          gh release view "$TAG" -R "$REPO" --json assets -q '.assets[] | "\(.name)\t\(.size)"'
