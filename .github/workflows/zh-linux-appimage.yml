@@ -133,7 +133,7 @@ jobs:
   # Copies an existing build artifact into a Release's assets so it can be downloaded
   # directly from the Releases page (artifacts themselves expire and never show there).
   # Dispatch with publish_only=true, artifact_run_id=<run that built zh-appimage>,
-  # release_tag=<e.g. v1.2.1>.
+  # release_tag=<e.g. v1.1.0-cn>.
   publish:
     if: ${{ inputs.publish_only == 'true' }}
     runs-on: ubuntu-22.04

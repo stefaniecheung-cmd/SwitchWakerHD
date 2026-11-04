@@ -8,7 +8,8 @@ what is on `devel` and not released yet (also in the
 ## v1.1.0-cn（本 fork · 对齐上游 v1.1.0 发布线）
 
 > 版本命名自本次起与上游对齐：`v<上游版本>-cn`。此前本 fork 用过 `v1.2.0` / `v1.2.1` / `v1.2.2`
-> 三个自成体系的编号，容易被误认为比上游更新；从 `v1.1.0-cn` 起统一跟随上游的 tag。
+> 三个自成体系的编号，容易被误认为比上游更新；从 `v1.1.0-cn` 起统一跟随上游的 tag，旧的三个
+> 发布页与 tag 已删除。
 
 - **同步上游至 `78fd5af`（89 个提交，含 v1.1.0 标签之后的全部改动）**：设置菜单的西班牙语/葡语/
   意语/德语/法语（#86）、按区域分发 PGO 配置（#90）、工作线程使用 core 3（#106）、SaltyNX 状态
@@ -20,44 +21,19 @@ what is on `devel` and not released yet (also in the
   解决 `CMakeLists.txt` 等文件以 CRLF 存储、每次同步上游都被判为整文件冲突的问题。
 - **保留本 fork 的启动要求。** 游戏必须从 HOME 屏的 forwarder 图标启动（`INSTALL.md` 已按此重写）。
 
-## v1.2.2（本 fork · Linux/AppImage 构建修复）
+## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
 
-> 本小节记录 `zh-desktop` 分支修复 SteamOS AppImage 构建失败的问题（不影响已发布的 Switch NRO v1.2.1）。
+> 这三个编号是本 fork 早期自成体系的版本号，对应的 GitHub 发布页与 tag **已于 2026-11-04 删除**，
+> 内容全部包含在 `v1.1.0-cn` 中。此处仅保留技术记录以便追溯。
 
-- **修复 AppImage 构建失败（链接错误）。** 上游 #322 让 `runtime/src/hle/fs.cpp` 调用 `os_time::from_unix`
-  / `os_time::repair_save_stamp`（定义于 `runtime/src/hle/os_time.cpp`），但 `mod_content_fs_test` 与
-  `language_source_test` 两个测试目标编译 `fs.cpp` 时未把 `os_time.cpp` 加入源列表，导致链接报
-  `undefined symbol`。已在 `CMakeLists.txt` 中将 `runtime/src/hle/os_time.cpp` 补入这两个目标。
-- **主程序 `wwhd` 不受影响。** 该符号缺失仅存在于测试目标，本次修复使完整构建（含 AppImage 打包）通过。
-- **修复 AppImage 安装报 `ModuleNotFoundError: fork_passes`。** 打包清单 `tools/release/package.py` 的 `TOOL_FILES` 只列了 6 个 `tools/recomp` 模块，漏了 fork 新增的 `fork_passes.py` 及其依赖 `calleeregs.py`、`singleflow.py`。安装向导在「翻译游戏代码」阶段 `import fork_passes` 会失败。已把这三个文件补进打包清单。
-
-## v1.2.1（本 fork · 上游同步 + 中文化补齐）
-
-> 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
-> 本版本把上游 `centollOS/SwitchWakerHD` 的最新改动合并进中文分支，并补齐新功能的中文翻译。
-
-- **同步上游（15 个提交）。** 合并 `main`（已 fast-forward 到上游 `225a0de`）进 `zh-desktop`：
-  - **视频录制**：用截图键录制最近 30 秒视频片段，默认关闭（#38）。
-  - **存档日期**：`OSGetTime` 作为日历时钟，修复存档日期显示（#100/#322）。
-  - **自动存档**：默认开启、独立线程写文件、「已自动存档」提示（#92）。
-  - **Overlay 滑块**：按住实时生效、松手保存，修复滑块死锁（#101）。
-- **中文化补齐（zh_table.inc 新增 11 条）。** 为新功能补上简体中文：视频片段 8 条
-  （标题、录制说明、HOME 菜单提示、不支持提示等）+ 自动存档 3 条（「已自动存档」提示、说明、默认关闭提示）。
-- **冲突解决。** `CMakeLists.txt` 合并冲突已解决：保留中文化 5 处改动，并纳入上游新增的 `os_time_test` 测试目标。
-
-## v1.2.0（本 fork · 分支重组与维护）
-
-> 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
-> 本版本无游戏代码变更，是一次分支结构整理与文档补充。
-
-- **分支重组。** `main` 现严格跟踪上游 `centollOS/SwitchWakerHD`（此前混入 3 个 fork 自有的
-  `zh-linux-appimage` CI 提交，已回退；该工作流文件保留在 `zh-desktop` 中，未丢失）。`zh-desktop`
-  作为长期维护分支，承载中文化、Switch 退出修复与发布；上游更新时 `main` fast-forward，再 merge 进
-  `zh-desktop`，冲突仅限 fork 自有文件。
-- **补齐上游 remote。** 新增 `upstream`（`centollOS/SwitchWakerHD`）与可选的 `upstream-desktop`
-  （`ZeldaWWHDRecomp`），并在此分支链路上加入维护文档说明。
-- **文档补充。** README 新增「Branches and maintenance」章节，说明分支结构、三级 fork 谱系
-  （ZeldaWWHDRecomp → centollOS/SwitchWakerHD → 本 fork）与上游同步流程。
+- **v1.2.0**：`main` 严格跟踪上游 `centollOS/SwitchWakerHD`，`zh-desktop` 转为长期维护分支；补齐
+  `upstream` / `upstream-desktop` remote；README 增加分支结构与同步流程说明。
+- **v1.2.1**：同步上游 15 个提交（视频片段 #38、存档日期 #100/#322、自动存档 #92、overlay 滑块 #101），
+  补 11 条中文；解决 `CMakeLists.txt` 合并冲突。
+- **v1.2.2**（仅修缺陷，未单独发布）：① 上游 #322 后 `fs.cpp` 依赖 `os_time.cpp`，但
+  `mod_content_fs_test` / `language_source_test` 未链入该源文件，完整构建（含 AppImage 打包）链接失败；
+  ② `tools/release/package.py` 的 `TOOL_FILES` 漏了 `fork_passes.py` / `calleeregs.py` / `singleflow.py`，
+  导致 AppImage 安装时「翻译游戏代码」报 `ModuleNotFoundError`。
 
 ## v1.1.6（本 fork · 简体中文版）
 
