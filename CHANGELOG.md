@@ -5,6 +5,21 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.1.0-cn（本 fork · 对齐上游 v1.1.0 发布线）
+
+> 版本命名自本次起与上游对齐：`v<上游版本>-cn`。此前本 fork 用过 `v1.2.0` / `v1.2.1` / `v1.2.2`
+> 三个自成体系的编号，容易被误认为比上游更新；从 `v1.1.0-cn` 起统一跟随上游的 tag。
+
+- **同步上游至 `78fd5af`（89 个提交，含 v1.1.0 标签之后的全部改动）**：设置菜单的西班牙语/葡语/
+  意语/德语/法语（#86）、按区域分发 PGO 配置（#90）、工作线程使用 core 3（#106）、SaltyNX 状态
+  监控、掉帧采样器、后台着色器列表修复（#102）、固定的 Switch 工具链（`tools/toolchain`）等。
+- **中文化与上游新多语言机制共存。** 上游把菜单文案改走 `menu_i18n::tr()`，本 fork 在其内先查中文
+  表（`WWHD_ZH_UI` 下），因此 `Install %s` 这类格式化文案能在填参前翻译；未命中或 `WWHD_UI_EN=1`
+  时退回上游逻辑。`zh_table.inc` 新增 64 条（存档备份、安装进度、mod 移除等），共 **1307 条**。
+- **行尾统一为 LF。** 新增 `.gitattributes`（`* text=auto eol=lf`，`*.bat`/`*.cmd` 保留 CRLF），
+  解决 `CMakeLists.txt` 等文件以 CRLF 存储、每次同步上游都被判为整文件冲突的问题。
+- **保留本 fork 的启动要求。** 游戏必须从 HOME 屏的 forwarder 图标启动（`INSTALL.md` 已按此重写）。
+
 ## v1.2.2（本 fork · Linux/AppImage 构建修复）
 
 > 本小节记录 `zh-desktop` 分支修复 SteamOS AppImage 构建失败的问题（不影响已发布的 Switch NRO v1.2.1）。
