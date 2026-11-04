@@ -2,7 +2,7 @@
 #include "menu_i18n.h"
 
 #ifdef WWHD_ZH_UI
-#include "../platform/zh_tr.h"  // (this fork) the Chinese table, consulted before the other languages
+#include "platform/zh_tr.h"  // (this fork) the Chinese table, consulted before the other languages
 #endif
 
 #include <atomic>

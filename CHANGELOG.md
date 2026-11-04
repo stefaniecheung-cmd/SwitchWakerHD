@@ -20,6 +20,10 @@ what is on `devel` and not released yet (also in the
 - **行尾统一为 LF。** 新增 `.gitattributes`（`* text=auto eol=lf`，`*.bat`/`*.cmd` 保留 CRLF），
   解决 `CMakeLists.txt` 等文件以 CRLF 存储、每次同步上游都被判为整文件冲突的问题。
 - **保留本 fork 的启动要求。** 游戏必须从 HOME 屏的 forwarder 图标启动（`INSTALL.md` 已按此重写）。
+- **修复 Linux/AppImage 构建：`menu_i18n.cpp` 的中文头文件路径。** 该文件位于 `runtime/src/`，
+  却写成 `#include "../platform/zh_tr.h"`（解析为不存在的 `runtime/platform/zh_tr.h`）。只有带
+  `-I runtime/src/platform` 的目标能编过，Linux 的测试目标（如 `mod_restart_ui_test`）缺少该路径而失败。
+  改为 `#include "platform/zh_tr.h"`，任何只带 `-I runtime/src` 的目标都能解析。
 
 ## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
 
