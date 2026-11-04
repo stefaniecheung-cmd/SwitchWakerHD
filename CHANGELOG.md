@@ -35,6 +35,10 @@ what is on `devel` and not released yet (also in the
 - **内置 mod 不再出现在社区 mod 列表。** `packages::scan` 跳过 id 与内置 mod 相同的文件夹（`<配置目录>/mods/<id>`
   才是内置 mod 读包的位置，`ModManager/Mods/` 里的副本会被当成外部库 mod 构建，本 fork 一律拒绝，看起来
   像「内置 mod 坏了」）；目录扫描时记一行日志说明，安装同 id 的包也会被直接拒掉。
+- **同一版本号的新构建会被认出是更新。** 之前安装器只比较版本字符串：重新构建的 `v1.1.0-cn`（例如加了
+  内置 mod 的那版）被当作「游戏已安装」，玩家选「play」就跑的还是旧镜像的运行时与游戏代码——内置 mod
+  页面因此是空的，gc-minimap 也报「native guest mods are not supported」。现在 `sdk/manifest.json` 记录
+  构建来源（`release`，CI 为提交哈希），`install.json` 记下它，两者不同就提示 update 而不是直接启动。
 
 ## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
 

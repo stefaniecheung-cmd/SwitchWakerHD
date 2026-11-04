@@ -2635,6 +2635,10 @@ def install(ctx, source, keys=None, info=None, ui=None, check_keys=None):
              "installed": time.strftime("%Y-%m-%d %H:%M:%S"), "toolchain": manifest["toolchain"],
              "placeholder_code": kind == "gen",
              "code_mods": code_mods.hooks_option(getattr(args, "code_mods", None))}
+    if manifest.get("release"):
+        # (this fork) which build of this version was installed: a rebuilt release of the same
+        # version has another id, and the setup offers that update instead of "already installed"
+        state["sdk_release"] = manifest["release"]
     if manifest.get("variant"):
         state["variant"] = manifest["variant"]  # "decomp": the decomp build (docs/decomp-build.md)
     if os.environ.get("APPIMAGE"):
@@ -2877,6 +2881,11 @@ def run(args, ui):
     say("Install folder: %s" % data_dir)
     state = ctx.state()
     installed = ctx.installed()
+    # (this fork) sdk/manifest.json records the build this release came from: same version string but
+    # another build (a rebuilt v1.1.0-cn) must offer an update, or the player keeps running the game
+    # code and runtime of the image they installed first (no new features, no new built-in mods)
+    release = ctx.manifest.get("release") or ""
+    same_release = not release or state.get("sdk_release") == release
     if getattr(args, "decomp", None) and not decomp_offered(ctx.manifest):
         raise SetupError("the decomp version is offered on macOS in development builds only (docs/decomp-build.md)")
     if getattr(args, "start_decomp", None) is not None:
@@ -2913,9 +2922,14 @@ def run(args, ui):
         source = ("installed", game_dir)
     elif installed and ui.interactive:
         say("")
-        if state.get("version") != version:
-            say("Installed: %s. This release: %s." % (state.get("version"), version))
-            i = ui.choose("What do you want to do?", ["update to %s (keeps your game files and saves)" % version,
+        if state.get("version") != version or not same_release:
+            if state.get("version") != version:
+                say("Installed: %s. This release: %s." % (state.get("version"), version))
+            else:
+                say("Installed: %s, an earlier build of this release (%s). This one is %s." %
+                    (version, state.get("sdk_release") or "before builds had an id", release or "a source build"))
+            i = ui.choose("What do you want to do?", ["update to this build (rebuilds the game code; keeps your "
+                                                      "game files and saves)",
                                                       "play the installed version", "quit"])
             if i == 1:
                 launch(state, data_dir)
@@ -2940,12 +2954,14 @@ def run(args, ui):
                 return 0
             if i == 1:
                 source = ("installed", game_dir)
-    elif installed and not ui.interactive and state.get("version") == version:
+    elif installed and not ui.interactive and state.get("version") == version and same_release:
         say("Already installed (%s)." % version)
         if not args.no_launch:
             launch(state, data_dir)
         return 0
     elif valid_game_folder(game_dir) and not ui.interactive:
+        if installed and not same_release:
+            say("Installed: %s, an earlier build of this release. Updating (rebuilds the game code)." % version)
         source = ("installed", game_dir)
     if source is None:
         if valid_game_folder(game_dir) and ui.yesno("Game files from an earlier setup were found in %s. Use them?" % game_dir):

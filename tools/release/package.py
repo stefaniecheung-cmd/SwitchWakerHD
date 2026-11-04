@@ -394,6 +394,20 @@ def file_sha256(path):
     return h.hexdigest()
 
 
+def release_id():
+    """(this fork) the commit this release was built from (CI sets GITHUB_SHA). It goes into
+    sdk/manifest.json as "release": a rebuilt release of the same version is a different id, which is
+    what lets the setup offer an update instead of "already installed" (see setup.py, run())."""
+    sha = (os.environ.get("GITHUB_SHA") or "").strip()
+    if not sha:
+        try:
+            sha = subprocess.check_output(["git", "-C", ROOT, "rev-parse", "HEAD"],
+                                          stderr=subprocess.DEVNULL, text=True).strip()
+        except (OSError, subprocess.CalledProcessError):
+            sha = ""
+    return sha[:12]
+
+
 def build_link_recipe(build, pkg, linkonly):
     args = link_command(build)
     recipe, objs, libs = [], 0, 0
@@ -575,6 +589,10 @@ def main():
     manifest = {
         "format": 1,
         "version": a.version,
+        # (this fork) what this build is beyond its version string: two builds of one version (a
+        # rebuilt v1.1.0-cn) differ here, so the setup can tell an installed game from an older
+        # image of the same version instead of greeting it as "the game is installed"
+        "release": release_id(),
         "platform": a.platform,
         "toolchain": a.toolchain,
         "exe": "wwhd" + exe_suffix,
