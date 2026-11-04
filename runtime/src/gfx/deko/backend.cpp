@@ -2,7 +2,6 @@
 // Every GX2 swap presents the game's TV picture (present_source, dk_surfaces.h) with the picture adjustments,
 // the FPS counter and the settings overlay (hold Minus); black until the game has copied a picture to the TV
 // scan buffer. Also here: submits, the statistics, hitch log and trace.
-#include <malloc.h>
 #include <unistd.h>
 extern "C" char* fake_heap_end;  // libnx: the end of the heap malloc grows into (sbrk)
 #include "platform/bench_switch.h"  // (this fork) the performance test
@@ -19,6 +18,8 @@ extern "C" char* fake_heap_end;  // libnx: the end of the heap malloc grows into
 #include "../../platform/host.h"  // (this fork v4) shutdown_threads: the orderly shutdown's thread termination
 #include "../../platform/core_switch.h"  // (this fork v6) release_memory: the guest window on the way out
 #include "../../platform/background_shaders_switch.h"  // (this fork) the counter's shader line
+#include "../../platform/thread_sampler.h"  // (this fork) the sampler's hitch mode
+#include "../../platform/saltynx_switch.h"  // (this fork) the overlays' frame rate
 
 #include <algorithm>
 #include <atomic>
@@ -1068,13 +1069,16 @@ void frame_stats() {
             (unsigned long long)p.poolHits, rescale_pool_bytes() >> 20, 100.0 * perFrame(p.hudSwitches),
             fxaa_enabled() ? "on" : "off", 100.0 * perFrame(p.fxaaPasses));
         {  // (this fork, #37) what grows over a long session: malloc in use against its arena, and the containers
-            const struct mallinfo mi = mallinfo();
+            // (this fork) no mallinfo here: it walks every free chunk with malloc's lock held, stalling every
+            // allocating thread, and the heap fragments as the game plays (console, 10 min warp tour: 2,300 ->
+            // 41,000 free chunks, 0.3 -> 8.9 ms a call, on the render thread every 5 s). The debug server's
+            // "malloc" asks for it (memory_tour.py); the line keeps the heap's top (O(1))
             const ShaderMemory sm = shader_memory();
             const ImageHeapFigures ih = image_heap_figures();
-            LOG("[mem] malloc %zu MiB in use of %zu MiB taken (heap never used %zu MiB); shader variants %zu (%zu freed), GLSL %zu, "
+            LOG("[mem] heap never used %zu MiB; shader variants %zu (%zu freed), GLSL %zu, "
                 "programs %zu, translation records %zu (%zu KiB); surfaces %zu (with evicted ones); image heap %llu "
                 "chunks, %llu MiB, %.1f MiB free, largest free %.1f MiB",
-                size_t(mi.uordblks) >> 20, size_t(mi.arena) >> 20, heap_never_used_mib(), sm.variants, sm.evicted, sm.codes,
+                heap_never_used_mib(), sm.variants, sm.evicted, sm.codes,
                 sm.programs, sm.storedRecords, sm.storedBytes >> 10, surface_structs(), (unsigned long long)ih.chunks,
                 (unsigned long long)(ih.total >> 20), double(ih.free) / 1048576.0, double(ih.largestFree) / 1048576.0);
             image_trace_flush();
@@ -1347,6 +1351,8 @@ void present() {
         check_queue("the present", frame);
         dkQueuePresentImage(R.queue, g_swapchain, slot);
     }
+    // (this fork) the frame rate for the console's overlays (SaltyNX's block; the game's picture is 720p x the scale)
+    saltynx::frame(uint32_t(1280.0f * res_scale() + 0.5f), uint32_t(720.0f * res_scale() + 0.5f), g_winW, g_winH);
     const uint64_t t4 = now_ns();
     if (capture) LOG("[dk] capture frame %llu: recorded in %.2f ms, submitted and presented in %.2f ms", (unsigned long long)frame,
                      double(t3 - t2) / 1e6, double(t4 - t3) / 1e6);
@@ -1381,6 +1387,8 @@ void check_hitch(uint64_t now) {
     static uint64_t lastSwap = 0, lastDraws = 0, lastSkipped = 0, lastRenderWait = 0;
     static int logged = 0;
     const uint64_t renderWait = gx2::render_thread_wait_ns();
+    // (this fork) hitch mode of the sampler: a slow frame's samples to logs/hitch_*.samples (now_ns: ticks * 625 / 12)
+    if (lastSwap) thread_sampler::mark_frame(lastSwap * 12 / 625, now * 12 / 625, R.frame);
     if (lastSwap && now - lastSwap > 55'000'000ull) {
         g_hitches++;
         if (logged < 300) {
@@ -1418,6 +1426,7 @@ void swap() {
     }
     const uint64_t start = now_ns();
     check_hitch(start);
+    if (R.frame == 120) thread_sampler::start_flagged();  // (this fork) logs/hitch_profile.flag: the hitch mode
     present();
     R.perf.presentNs += now_ns() - start;
     g_times.presentNs += now_ns() - start;

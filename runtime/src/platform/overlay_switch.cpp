@@ -39,6 +39,7 @@
 #include "prepare_graphics_switch.h"
 #include "settings_switch.h"
 #include "shader_wait_switch.h"
+#include "../menu_i18n.h"
 #include "ui_text_switch.h"
 #include "update_notice_switch.h"
 #include "video_clips_switch.h"
@@ -723,6 +724,7 @@ void frame_layer_draw(float w, float h) {
 
 void register_ext() {
     namespace ext = overlay::ext;
+    menu_i18n::set_language_source(ui_text::language_code);  // upstream's menu texts in the game's language (menu_i18n.h)
     // the Switch renderer has its own options (Switch tab); one screen, and the controller maps by position
     // Saves, Picture, Controls, Audio, Mods, Warp, Dev (its content only with "Show developer options"),
     // Language / About

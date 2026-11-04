@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 
+#include "../menu_i18n.h"
 #include "../mods/guest_builtin.h"
 #include "../platform/zh_tr.h"  // (this fork) translate names, options and notes through the zh table
 #include "imgui.h"
@@ -46,25 +47,21 @@ static void option_control(guestbuiltin::Mod& m, guestbuiltin::Option& o, std::s
 void draw() {
     auto& list = guestbuiltin::list();
     if (list.empty()) return;
-    ImGui::SeparatorText(WWHD_ZH("Code mods in this build"));
-    wrapped(kMuted, WWHD_ZH("Built into the game when it was made (make_sd.py --guest-mod). To add or remove one, build the "
-                            "game again."));
+    ImGui::SeparatorText(WWHD_ZH(menu_i18n::tr("Code mods in this build")));
+    wrapped(kMuted, WWHD_ZH(menu_i18n::tr("Built into the game when it was made (make_sd.py --guest-mod). To add or remove one, build the "
+                                          "game again.")));
     // above the options: the last one a controller reaches is at the bottom of the tab, where a line under it is
     // out of view
     if (std::any_of(list.begin(), list.end(), [](const guestbuiltin::Mod& m) { return m.changed; }))
-        wrapped(kWarn, WWHD_ZH("Saved. The mods read their options when the game starts: close the game (HOME) and start it "
-                               "again to see the change."));
-    if (list.size() > 1)
-        wrapped(kMuted, WWHD_ZH("Mods that draw in the same place (the two minimaps) cover each other: switch one "
-                                "of them off."));
+        wrapped(kWarn, WWHD_ZH(menu_i18n::tr("Saved. The mods read their options when the game starts: close the game (HOME) and start it "
+                                             "again to see the change.")));
     for (auto& m : list) {
         ImGui::PushID(m.id.c_str());
         ImGui::Spacing();
         ImGui::TextUnformatted((std::string(WWHD_ZH(m.name.c_str())) + "  " + m.version).c_str());
-        if (!m.enabled) wrapped(kMuted, WWHD_ZH("Off: the game starts without it."));  // (this fork) the switch below
         // (this fork) the reason a mod is not drawing, in the UI's language too (zh_table.inc has the
         // lines the port's own services set: "the game code has no mod hooks", the HUD PNG failures)
-        else if (!m.status.empty()) wrapped(kBad, std::string(WWHD_ZH("Not running: ")) + WWHD_ZH(m.status.c_str()));
+        if (!m.status.empty()) wrapped(kBad, std::string(WWHD_ZH(menu_i18n::tr("Not running: "))) + WWHD_ZH(m.status.c_str()));
         else if (!m.description.empty()) wrapped(kMuted, WWHD_ZH(m.description.c_str()));
         static std::string error;
         for (auto& o : m.options) {

@@ -84,7 +84,7 @@ macro(switch_port_sources)
                             runtime/src/platform/video_clips_switch.cpp
                             runtime/src/platform/debug_server.cpp
                             runtime/src/platform/debug_switch.cpp runtime/src/platform/posix_stubs_switch.cpp
-                            runtime/src/platform/startup_checks_switch.cpp runtime/src/platform/prepare_graphics_switch.cpp runtime/src/platform/audio_guard_switch.cpp runtime/src/platform/thread_heap_switch.cpp runtime/src/platform/shader_wait_switch.cpp runtime/src/platform/thread_sampler_switch.cpp
+                            runtime/src/platform/startup_checks_switch.cpp runtime/src/platform/prepare_graphics_switch.cpp runtime/src/platform/audio_guard_switch.cpp runtime/src/platform/thread_heap_switch.cpp runtime/src/platform/shader_wait_switch.cpp runtime/src/platform/thread_sampler_switch.cpp runtime/src/platform/saltynx_switch.cpp
                             runtime/src/platform/prepare_graphics_ui_switch.cpp runtime/src/platform/ui_text_switch.cpp runtime/src/platform/shader_scan_switch.cpp runtime/src/platform/shader_list_switch.cpp
                             runtime/src/platform/background_shaders_switch.cpp runtime/src/platform/main_switch.cpp runtime/src/platform/core_switch.cpp runtime/src/platform/audio_out_switch.cpp runtime/src/platform/overlay_switch.cpp
                             runtime/src/platform/upstream_stubs_switch.cpp runtime/src/platform/bench_switch.cpp
@@ -114,6 +114,18 @@ macro(switch_port_executable)
   if(WWHD_SWITCH AND WWHD_SWITCH_HIDDEN)
     target_compile_options(wwhd PRIVATE -fvisibility=hidden
                            "SHELL:-include \"${CMAKE_SOURCE_DIR}/runtime/include/switch_visibility.h\"")
+  endif()
+  # the toolchain that built the NRO, for the log and crash reports (switch_toolchain.h; docs/pinned-toolchain-plan.md)
+  if(WWHD_SWITCH)
+    set(WWHD_TOOLCHAIN_INFO ${CMAKE_BINARY_DIR}/generated/switch_toolchain.cpp)
+    add_custom_target(wwhd_toolchain_info
+      COMMAND ${CMAKE_COMMAND} -DOUT=${WWHD_TOOLCHAIN_INFO} -DCC=${CMAKE_C_COMPILER} -DDEVKITPRO=${DEVKITPRO}
+              -DUAM=${NX_UAM_EXE} -DHOST=${CMAKE_HOST_SYSTEM_NAME}
+              -P ${CMAKE_SOURCE_DIR}/cmake/SwitchToolchainInfo.cmake
+      BYPRODUCTS ${WWHD_TOOLCHAIN_INFO}
+      COMMENT "Toolchain info" VERBATIM)
+    target_sources(wwhd PRIVATE ${WWHD_TOOLCHAIN_INFO})
+    add_dependencies(wwhd wwhd_toolchain_info)
   endif()
   # guest mods built into the NRO (tools/switch/guest_mods.py, docs/guest-mods-switch-plan.md): their modules are
   # compiled as game code (same flags, x28); without build/guest-mods/registry.c the NRO has none

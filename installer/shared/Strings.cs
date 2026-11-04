@@ -3,10 +3,25 @@ using System.Globalization;
 
 namespace SwitchWakerHD.Installer;
 
-// Spanish / English. Starts in the system language; the welcome page can switch it.
-static class Str
+// Spanish / English / Brazilian Portuguese (StringsPt.cs). Starts in the system language; the welcome page's button
+// switches to the next one.
+enum Lang { Es, En, Pt }
+
+static partial class Str
 {
-    public static bool Es = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "es";
+    public static Lang Current = FromCode(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+    public static bool Es => Current == Lang.Es;
+    public static bool Pt => Current == Lang.Pt;
+
+    // "es", "pt-BR", "en_US.UTF-8"... -> the language; anything else is English
+    public static Lang FromCode(string code) =>
+        code.StartsWith("es", System.StringComparison.OrdinalIgnoreCase) ? Lang.Es :
+        code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase) ? Lang.Pt : Lang.En;
+
+    // the welcome page's button: it names the language it switches to
+    static Lang NextLang => Current == Lang.Es ? Lang.En : Current == Lang.En ? Lang.Pt : Lang.Es;
+    public static string NextLanguageName => NextLang == Lang.Es ? "Español" : NextLang == Lang.En ? "English" : "Português";
+    public static void SwitchLanguage() => Current = NextLang;
 
     static readonly Dictionary<string, (string es, string en)> Table = new()
     {
@@ -23,7 +38,6 @@ static class Str
         ["welcome_need"]   = ("Necesitas: tu dump personal de Wind Waker HD (USA o EUR, versión 0), conexión a internet y unos 10 GB libres.",
                                "You need: your personal dump of Wind Waker HD (USA or EUR, version 0), an internet connection and about 10 GB free."),
         ["welcome_dir"]    = ("Carpeta de trabajo: {0}",                             "Working folder: {0}"),
-        ["lang"]           = ("English",                                             "Español"),
         ["btn_start"]      = ("Comenzar",                                            "Get started"),
         ["btn_back"]       = ("Atrás",                                               "Back"),
         ["btn_install"]    = ("Instalar",                                            "Install"),
@@ -73,15 +87,31 @@ static class Str
         ["mm_dlg_title"]   = ("Selecciona tu Wind Waker de GameCube",                 "Select your GameCube Wind Waker"),
         ["mm_dlg_folder"]  = ("Selecciona la carpeta extraída de tu Wind Waker de GameCube", "Select the extracted folder of your GameCube Wind Waker"),
         ["mm_dlg_filter"]  = ("Disco de GameCube (*.iso;*.gcm;*.rvz)|*.iso;*.gcm;*.rvz|Todos (*.*)|*.*", "GameCube disc (*.iso;*.gcm;*.rvz)|*.iso;*.gcm;*.rvz|All files (*.*)|*.*"),
-        ["mm_rvz_note"]    = ("Un .rvz de Dolphin necesita Python 3.14 para leerse: el instalador lo añade junto al otro Python.",
-                               "A Dolphin .rvz needs Python 3.14 to be read: the installer adds it next to the other Python."),
         ["mm_pre"]         = ("Minimapa: Wind Waker de GameCube en {0}",              "Minimap: GameCube Wind Waker at {0}"),
         ["mm_no_game"]     = ("No se encuentra el Wind Waker de GameCube elegido para el minimapa: {0}. Elígelo otra vez o quítalo.",
                                "The GameCube Wind Waker chosen for the minimap is not there: {0}. Choose it again or remove it."),
-        ["mm_py_installing"] = ("Instalando Python 3.14 (para leer el .rvz del minimapa)...", "Installing Python 3.14 (to read the minimap's .rvz)..."),
-        ["mm_py_ok"]       = ("Python 3.14 listo para el .rvz del minimapa.",         "Python 3.14 ready for the minimap's .rvz."),
-        ["mm_py_fail"]     = ("No se pudo instalar Python 3.14, que hace falta para leer un .rvz de Dolphin. Instálalo desde python.org, o convierte el disco a .iso en Dolphin (clic derecho en el juego > Convertir archivo..., formato ISO) y elige ese.",
-                               "Could not install Python 3.14, which is needed to read a Dolphin .rvz. Install it from python.org, or turn the disc into an .iso in Dolphin (right-click the game > Convert File..., format ISO) and choose that."),
+        // Brazilian Portuguese: Triforce-Heroes' fan translation, downloaded by the player (make_sd.py --ptbr,
+        // docs/ptbr-translation-plan.md)
+        ["ptbr_h"]         = ("Traducción al portugués de Brasil (opcional)",          "Brazilian Portuguese translation (optional)"),
+        ["ptbr_d"]         = ("Pone el juego en portugués de Brasil con la traducción hecha por fans de Triforce-Heroes. No viene con el instalador: descárgala tú de su página (la versión «Emulador») y elige aquí el archivo descargado (.rar) o la carpeta donde lo extrajiste. Se aplica sobre tu propio juego original.",
+                               "Plays the game in Brazilian Portuguese with Triforce-Heroes' fan translation. It does not come with the installer: download it yourself from their page (the \"Emulador\" version) and choose the downloaded file (.rar) here, or the folder you extracted it to. It is applied on your own original game."),
+        ["ptbr_link"]      = ("Abrir la página de Triforce-Heroes",                     "Open Triforce-Heroes' page"),
+        ["ptbr_none"]      = ("Sin traducción",                                         "No translation"),
+        ["ptbr_pick"]      = ("Elegir descarga...",                                     "Choose download..."),
+        ["ptbr_folder"]    = ("Carpeta...",                                             "Folder..."),
+        ["ptbr_dlg_title"] = ("Selecciona la traducción descargada de Triforce-Heroes", "Select the translation downloaded from Triforce-Heroes"),
+        ["ptbr_dlg_folder"] = ("Selecciona la carpeta donde extrajiste la traducción",  "Select the folder you extracted the translation to"),
+        ["ptbr_dlg_filter"] = ("Traducción (*.rar;*.zip;*.7z;*.pack)|*.rar;*.zip;*.7z;*.pack|Todos (*.*)|*.*", "Translation (*.rar;*.zip;*.7z;*.pack)|*.rar;*.zip;*.7z;*.pack|All files (*.*)|*.*"),
+        ["ptbr_type"]      = ("Traducción (.rar, .zip, .7z, .pack)",                    "Translation (.rar, .zip, .7z, .pack)"),
+        ["ptbr_pre"]       = ("Portugués de Brasil: la traducción de {0}",              "Brazilian Portuguese: the translation from {0}"),
+        ["ptbr_no_file"]   = ("No se encuentra la traducción elegida: {0}. Elígela otra vez o quítala.",
+                               "The chosen translation is not there: {0}. Choose it again or remove it."),
+        ["ptbr_old_release"] = ("Esta versión de SwitchWakerHD todavía no admite la traducción al portugués: se instala sin ella.",
+                               "This SwitchWakerHD release does not support the Portuguese translation yet: it is installed without it."),
+        ["ptbr_building"]  = ("Aplicando la traducción al portugués sobre tu juego...", "Applying the Portuguese translation to your game..."),
+        ["ptbr_done"]      = ("Portugués de Brasil: el juego empieza en portugués (si antes elegiste otro idioma en el juego, elige Português (Brasil) en Menos > Language). Para cambiar de idioma: mantén Menos > Language, elige otro y reinicia el juego.",
+                               "Brazilian Portuguese: the game starts in Portuguese (if you chose another language in the game before, choose Português (Brasil) in Minus > Language). To change the language: hold Minus > Language, choose another one and restart the game."),
+
         // Prepared graphics (issue #88: the release's shader template, make_sd.py --shaders)
         ["sh_h"]           = ("Preparar los gráficos ahora",                          "Prepare the graphics now"),
         ["sh_d"]           = ("Compila en este ordenador los gráficos del juego a partir de tus propios archivos, para que la consola no tenga que hacerlo la primera vez: sin pantalla de carga ni lugares en negro. Tarda unos minutos más.",
@@ -120,8 +150,13 @@ static class Str
         // Progress page
         ["prog_h"]         = ("Instalando",                                          "Installing"),
         ["prog_body"]      = ("Puedes dejar el PC trabajando. El build tarda entre 10 y 30 minutos.", "You can leave the PC working. The build takes 10 to 30 minutes."),
-        ["step_python"]    = ("Python 3",                                            "Python 3"),
+        ["step_python"]    = ("Python 3.14",                                          "Python 3.14"),
         ["step_devkit"]    = ("devkitPro (herramientas de Switch)",                  "devkitPro (Switch tools)"),
+        ["tc_fetching"]    = ("Descargando las herramientas de Switch fijadas (devkitPro, ~130 MB la primera vez)...",
+                              "Downloading the pinned Switch tools (devkitPro, ~130 MB the first time)..."),
+        ["tc_ready"]       = ("Herramientas de Switch listas: {0}",                    "Switch tools ready: {0}"),
+        ["tc_fail"]        = ("No se pudieron descargar las herramientas de Switch fijadas (mira el registro). Pulsa Reintentar: lo ya descargado se conserva.",
+                              "The pinned Switch tools could not be downloaded (see the log). Press Retry: what was already downloaded is kept."),
         ["step_release"]   = ("Descargar SwitchWakerHD",                             "Download SwitchWakerHD"),
         ["step_build"]     = ("Construir el juego",                                  "Build the game"),
         ["elapsed"]        = ("Tiempo: {0}",                                         "Elapsed: {0}"),
@@ -130,13 +165,11 @@ static class Str
         ["cancelled"]      = ("Instalación cancelada.",                              "Installation cancelled."),
 
         // Engine messages
+        ["py_desk_arch"]    = ("Este equipo ({0}) no es ARM64 ni x86-64.", "This computer ({0}) is neither ARM64 nor x86-64."),
+        ["py_desk_downloading"] = ("Descargando Python {0}...",                        "Downloading Python {0}..."),
+        ["py_desk_unpacking"] = ("Preparando Python...",                               "Setting up Python..."),
+        ["py_desk_fail"]    = ("Python no arranca desde {0}. Borra esa carpeta y pulsa Reintentar.", "Python does not start from {0}. Delete that folder and press Retry."),
         ["py_found"]       = ("Python encontrado: {0}",                              "Python found: {0}"),
-        ["py_unsuitable"]  = ("No sirve: {0} (hace falta Python 3.8 o posterior, de 64 bits).", "Not usable: {0} (Python 3.8 or newer, 64-bit, is needed)."),
-        ["py_installing"]  = ("Instalando Python 3.12...",                           "Installing Python 3.12..."),
-        ["py_fail"]        = ("No se pudo instalar Python automáticamente. Instala Python 3 desde python.org (marca \"Add python.exe to PATH\") y vuelve a intentarlo.",
-                               "Could not install Python automatically. Install Python 3 from python.org (tick \"Add python.exe to PATH\") and try again."),
-        ["py_no_winget"]   = ("No se pudo instalar Python automáticamente: este Windows no tiene winget (el Instalador de aplicaciones). Instala Python 3 desde python.org (marca \"Add python.exe to PATH\") y vuelve a intentarlo.",
-                               "Could not install Python automatically: this Windows has no winget (App Installer). Install Python 3 from python.org (tick \"Add python.exe to PATH\") and try again."),
         ["py_pkgs"]        = ("Instalando dependencias de Python...",                "Installing Python dependencies..."),
         ["dkp_searching"]  = ("Buscando devkitPro...",                               "Looking for devkitPro..."),
         ["dkp_found_at"]   = ("devkitPro encontrado: {0}",                           "devkitPro found: {0}"),
@@ -251,8 +284,8 @@ static class Str
         ["hint_path_space"]= ("La ruta de la carpeta de trabajo tiene un espacio, y esta versión del juego no lo admite.", "The working folder's path has a space in it, which this version of the game does not support."),
         ["hint_broken_obj"]= ("Un build anterior se interrumpió y dejó archivos a medias; ya se han borrado. Pulsa Reintentar: se compila de nuevo.",
                                "An earlier build was interrupted and left half-written files; they have been deleted. Press Retry to compile again."),
-        ["hint_tool_missing"] = ("Falta una herramienta de devkitPro. Pulsa Reintentar; si vuelve a fallar, en Inicio > devkitPro > MSYS2 ejecuta: pacman -Syu (dos veces si te pide cerrar la ventana) y después pacman -S --needed switch-dev deko3d uam switch-lz4 switch-zlib switch-cmake cmake make",
-                               "A devkitPro tool is missing. Press Retry; if it fails again, in Start > devkitPro > MSYS2 run: pacman -Syu (twice if it asks you to close the window), then pacman -S --needed switch-dev deko3d uam switch-lz4 switch-zlib switch-cmake cmake make"),
+        ["hint_tool_missing"] = ("Falta una herramienta de devkitPro. Pulsa Reintentar; si vuelve a fallar, en Inicio > devkitPro > MSYS2 ejecuta: pacman -Syu (dos veces si te pide cerrar la ventana) y después pacman -S --needed devkitA64 switch-dev deko3d uam switch-lz4 switch-zlib switch-cmake cmake make",
+                               "A devkitPro tool is missing. Press Retry; if it fails again, in Start > devkitPro > MSYS2 run: pacman -Syu (twice if it asks you to close the window), then pacman -S --needed devkitA64 switch-dev deko3d uam switch-lz4 switch-zlib switch-cmake cmake make"),
         ["hint_av"]        = ("Windows denegó el acceso a un archivo. Suele ser un antivirus o el \"acceso controlado a carpetas\" de Windows: añade C:\\devkitPro y la carpeta de trabajo a sus exclusiones y pulsa Reintentar.",
                                "Windows denied access to a file. This is usually an antivirus or Windows' \"Controlled folder access\": add C:\\devkitPro and the working folder to its exclusions and press Retry."),
         ["hint_silent"]    = ("El build se detuvo sin mensaje: una herramienta de devkitPro no llegó a arrancar (suele faltarle una biblioteca tras una actualización a medias de MSYS2, o la bloquea un antivirus). En Inicio > devkitPro > MSYS2 ejecuta pacman -Syu (dos veces si lo pide) y pulsa Reintentar.",
@@ -299,15 +332,34 @@ static class Str
                                "This installer needs administrator rights. Right-click the .exe and choose \"Run as administrator\"."),
     };
 
-    // Another system's wording (the macOS installer: desktop/MacStrings.cs): its keys win over Table's.
+    // Another system's wording (the macOS installer: desktop/MacStrings.cs): its keys win over Table's (and its
+    // Portuguese ones over PtTable's).
     static Dictionary<string, (string es, string en)>? overrides;
-    public static void Override(Dictionary<string, (string es, string en)> table) => overrides = table;
+    static Dictionary<string, string>? overridesPt;
+    public static void Override(Dictionary<string, (string es, string en)> table, Dictionary<string, string>? pt = null)
+    {
+        overrides = table;
+        overridesPt = pt;
+    }
 
     public static string Get(string key, params object[] args)
     {
-        if ((overrides == null || !overrides.TryGetValue(key, out var pair)) && !Table.TryGetValue(key, out pair))
-            return $"[{key}]";
-        var s = Es ? pair.es : pair.en;
+        bool own = overrides != null && overrides.ContainsKey(key);
+        if (!own && !Table.ContainsKey(key)) return $"[{key}]";
+        var pair = own ? overrides![key] : Table[key];
+        string s;
+        if (Current == Lang.Pt)  // a key without Portuguese is the English one
+            s = own ? (overridesPt != null && overridesPt.TryGetValue(key, out var p) ? p : pair.en)
+                    : (PtTable.TryGetValue(key, out var q) ? q : pair.en);
+        else
+            s = Current == Lang.Es ? pair.es : pair.en;
         return args.Length > 0 ? string.Format(s, args) : s;
+    }
+
+    // the keys of a language table that lack Portuguese (tests and the builds' check)
+    public static IEnumerable<string> MissingPortuguese()
+    {
+        foreach (var k in Table.Keys) if (!PtTable.ContainsKey(k) && !(overrides?.ContainsKey(k) ?? false)) yield return k;
+        if (overrides != null) foreach (var k in overrides.Keys) if (!(overridesPt?.ContainsKey(k) ?? false)) yield return k;
     }
 }
