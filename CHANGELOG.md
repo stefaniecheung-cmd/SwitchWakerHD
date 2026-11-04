@@ -24,6 +24,14 @@ what is on `devel` and not released yet (also in the
   却写成 `#include "../platform/zh_tr.h"`（解析为不存在的 `runtime/platform/zh_tr.h`）。只有带
   `-I runtime/src/platform` 的目标能编过，Linux 的测试目标（如 `mod_restart_ui_test`）缺少该路径而失败。
   改为 `#include "platform/zh_tr.h"`，任何只带 `-I runtime/src` 的目标都能解析。
+- **桌面版（AppImage）可以用代码 mod 了。** 新增「mod 编进游戏代码」的桌面路径（`CMakeLists.txt`：
+  存在 `build/guest-mods/registry.c` 时定义 `WWHD_GUEST_BUILTIN` 并把它编进 gamecode；打包带上
+  `sdk/guest-mods`；`setup.py` 用 `hooks.txt` 以 `WWHD_RECOMP_MOD_HOOKS_ONLY` 重新翻译玩家的游戏代码）。
+  gc-minimap 因此在 SteamOS 上可用，地图数据仍由玩家自己的光盘生成、不随包分发。
+- **随包附三个 mod，装上即用。** `extra-mods/`（女性语音、林可儿）与内置的 gc-minimap 由安装器放进
+  玩家 Mods 目录，manifest 里的 `enabled_by_default` 让它们默认开启；Switch 端内容 mod 解压到
+  `sdmc:/switch/wwhd/ModManager/Mods/` 即可（NRO 不写 SD 卡）。`guard.py` 对
+  `sdk/bundled-mods/` 下的游戏文件树放行，其余检查不变。
 
 ## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
 

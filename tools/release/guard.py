@@ -81,6 +81,11 @@ SHADERCACHE_DOCS = re.compile(r"(^|/)tools/shadercache/(README\.md|template\.ref
 # (this fork: the source zip) "content/" paths of upstream's that are not game files: the empty placeholder of a
 # guest-mod example's content folder, and the Java stubs of Android's android.content package
 NOT_GAME_TREE = re.compile(r"(^|/)(examples/guest-mods/[^/]+/content/\.gitkeep|runtime/tools/[^/]+_stubs/android/content/[^/]+\.java)$")
+# (this fork) the mod packages a release bundles (sdk/bundled-mods/<id>/, extra-mods/ in the source): a content
+# mod keeps the game's own folder layout, because replacing files of that tree is what it does, so its content/
+# folder is a game file tree by the rule above on purpose. It ships only because a release was asked for with
+# mods in it, never from the game disc: every content check (code, keys, shader caches) still applies to its files.
+BUNDLED_MODS = re.compile(r"(^|/)sdk/bundled-mods/")
 PYTHON_FILES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-windows-files.json")
 PYTHON_FILES_ARM64 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-windows-arm64-files.json")
 PYTHON_DIR = re.compile(r"(?:^|/)tools/python/(.+)$")
@@ -350,6 +355,7 @@ def check_entry(name, data, problems):
             continue
         if rx.search(n) and not (safe_template and why in ("shader cache", "local shader cache tree")) \
                 and not (why == "local shader cache tree" and SHADERCACHE_DOCS.search(n)) \
+                and not (why == "game file tree" and BUNDLED_MODS.search(n)) \
                 and not (why == "game file tree" and NOT_GAME_TREE.search(n) and (n.endswith(".java") or not data)):
             problems.append("%s: %s" % (name, why))
     ext = os.path.splitext(n)[1].lower()
