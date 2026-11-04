@@ -59,6 +59,9 @@ struct Manifest {
     std::vector<catalogue::Step> setup;
     std::vector<std::string> setup_tools;
     bool experimental=false;
+    // (this fork) a package the release ships (its installer or SD folder puts it in Mods/): on until the
+    // player turns it off in the Mods tab, so a bundled mod needs no first-run visit to the tab
+    bool enabled_by_default=false;
     // the Story Notebook package's "notebook" block (the notebook's look): its files and its layout
     // folder, exempt from the HUD texture budget with limits of their own (notebook_look)
     std::set<std::string> notebook_files;
@@ -161,6 +164,8 @@ Manifest manifest(const fs::path& path){
     m.kind=string_field(v,"kind",false,32);require(m.kind=="native"||m.kind=="guest"||m.kind=="settings"||m.kind=="content"||m.kind=="cemu","Unsupported mod kind");
     const auto& experimental=v.get("experimental");require(experimental.type==Value::Null||experimental.type==Value::Bool,"Invalid experimental flag");
     m.experimental=experimental.boolean;
+    const auto& by_default=v.get("enabled_by_default");require(by_default.type==Value::Null||by_default.type==Value::Bool,"Invalid enabled_by_default flag");
+    m.enabled_by_default=by_default.boolean;
     if(!game_id_supported(string_field(v,"game_id",false,64)))m.problem="This package targets another game";
     auto minimum=string_field(v,"minimum_manager_version",true,64);
     if(!minimum.empty()&&version(minimum)>version(kManagerVersion))m.problem="Requires mod manager "+minimum;
@@ -328,7 +333,11 @@ Manifest manifest(const fs::path& path){
     return m;
 }
 Value& profile(){return database["profiles"][database.get("active").string("Default")];}
-bool wanted(const std::string& id){const auto& v=profile().get("enabled").get(id);return v.type==Value::Bool&&v.boolean;}
+bool wanted(const std::string& id){const auto& v=profile().get("enabled").get(id);
+    if(v.type==Value::Bool)return v.boolean;
+    // (this fork) a bundled package's manifest turns it on until the player decides otherwise: the profile
+    // records nothing for it yet, so the switch in the Mods tab writes the first entry (false or true)
+    auto it=records.find(id);return it!=records.end()&&it->second.manifest.enabled_by_default;}
 // Test aid: WWHD_TEST_TRUST_NATIVE_MODS=id[,id...] pre-confirms packages, only in isolated test runs
 // (WWHD_NO_HOST_INPUT plus an explicit WWHD_MOD_MANAGER_DIR). Nothing is written to profiles.json.
 bool test_trusted(const std::string& id){

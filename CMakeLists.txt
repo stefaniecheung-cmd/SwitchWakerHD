@@ -311,6 +311,16 @@ if(ANDROID)
 else()
   add_executable(wwhd ${RUNTIME_SOURCES} ${GX2_SOURCES} ${GFX_SOURCES} ${MOD_GFX_SOURCES} ${IMGUI_METAL})
 endif()
+# (this fork) guest mods built into the game code (tools/switch/guest_mods.py; cmake/SwitchPort.cmake does the
+# same for the NRO): with build/guest-mods/registry.c, the mods are compiled into the game code and the runtime
+# looks them up (runtime/src/mods/guest_builtin.cpp, WWHD_GUEST_BUILTIN). The installer compiles the same files
+# into the player's game code (tools/installer/setup.py), so a release ships sdk/guest-mods.
+if(NOT WWHD_SWITCH AND EXISTS "${CMAKE_SOURCE_DIR}/build/guest-mods/registry.c")
+  file(GLOB _guest_mod_sources CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/build/guest-mods/mod_*.c)
+  target_sources(gamecode PRIVATE ${CMAKE_SOURCE_DIR}/build/guest-mods/registry.c ${_guest_mod_sources})
+  target_compile_definitions(wwhd PRIVATE WWHD_GUEST_BUILTIN=1)
+  message(STATUS "guest mods built into the game code: ${_guest_mod_sources}")
+endif()
 # Testing (desktop): sanitizers for the runtime, GX2 and renderer code and Cemu's decompiler, e.g.
 # -DWWHD_SANITIZE=address. The generated game code is left out (too large; it only touches guest memory).
 set(WWHD_SANITIZE "" CACHE STRING "sanitizers for the runtime (desktop testing), e.g. address or address,undefined")

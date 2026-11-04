@@ -43,8 +43,11 @@ static std::string read_file(const std::string& path) {
 static std::string mod_dir(const char* id) { return host::config_dir() + "/mods/" + id; }
 
 #if WWHD_GUEST_BUILTIN
+// The table comes from registry.c, compiled with the game code (CMakeLists.txt: build/guest-mods/registry.c
+// when it exists; the installer compiles sdk/guest-mods into the player's game code). A strong reference:
+// an undefined weak one would not pull registry.o out of libgamecode.a, and the mods would silently never load.
 static const WWHDGuestBuiltin* begin() { return g_guest_builtin; }
-static const WWHDGuestBuiltin* end() { return g_guest_builtin + g_guest_builtin_count; }
+static const WWHDGuestBuiltin* end() { return g_guest_builtin ? g_guest_builtin + g_guest_builtin_count : nullptr; }
 #else
 static const WWHDGuestBuiltin* begin() { return nullptr; }
 static const WWHDGuestBuiltin* end() { return nullptr; }

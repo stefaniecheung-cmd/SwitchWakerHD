@@ -595,6 +595,34 @@ def main():
 
     for rel in TOOL_FILES + INSTALLER_FILES:
         copy(os.path.join(ROOT, rel), os.path.join(pkg, rel))
+    # (this fork) the guest mods built into the game code (tools/switch/guest_mods.py): registry.c, the mods'
+    # translated C and the game functions they hook. setup.py translates the player's game code with
+    # sdk/guest-mods/hooks.txt and compiles registry.c and the mods into it; the runtime finds them
+    # (WWHD_GUEST_BUILTIN). sd/<id>/ is the mod's package for the player's data folder: its map art comes
+    # from the player's own GameCube disc, so it is never in here.
+    builtin_mods = os.path.join(ROOT, "build", "guest-mods")
+    if os.path.isfile(os.path.join(builtin_mods, "registry.c")):
+        mods_pkg = os.path.join(pkg, "sdk", "guest-mods")
+        os.makedirs(mods_pkg, exist_ok=True)
+        for name in ("registry.c", "hooks.txt", "guest-mods.json"):
+            if os.path.isfile(os.path.join(builtin_mods, name)):
+                copy(os.path.join(builtin_mods, name), os.path.join(mods_pkg, name))
+        for name in sorted(os.listdir(builtin_mods)):
+            if re.match(r"mod_.*\.c$", name):
+                copy(os.path.join(builtin_mods, name), os.path.join(mods_pkg, name))
+        for name in ("translated", "sd"):
+            if os.path.isdir(os.path.join(builtin_mods, name)):
+                shutil.copytree(os.path.join(builtin_mods, name), os.path.join(mods_pkg, name),
+                                dirs_exist_ok=True)
+    # (this fork) the content mods the release bundles (extra-mods/: one folder per package, manifest.json
+    # with "enabled_by_default"): the installer copies them into the player's Mods folder
+    extra_mods = os.path.join(ROOT, "extra-mods")
+    if os.path.isdir(extra_mods):
+        bundled = [d for d in sorted(os.listdir(extra_mods))
+                   if os.path.isfile(os.path.join(extra_mods, d, "manifest.json"))]
+        if bundled:
+            shutil.copytree(extra_mods, os.path.join(pkg, "sdk", "bundled-mods"), dirs_exist_ok=True)
+            print("bundled content mods: " + ", ".join(bundled))
     copy_shader_template(ROOT, pkg)
     for hp in sorted(os.listdir(os.path.join(ROOT, "tools", "recomp"))):
         if re.match(r"hooks.*\.txt$", hp):
