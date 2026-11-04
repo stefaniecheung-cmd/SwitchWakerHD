@@ -2479,31 +2479,36 @@ def user_config_dir(exe_dir):
 
 
 def install_bundled_mods(exe_dir):
-    """(this fork) the mods this release ships land in the player's Mods folder so they work at the first
-    start: sdk/bundled-mods/<id>/ (content replacements) and sdk/guest-mods/sd/<id>/ (the package of a guest
-    mod compiled into the game code). Their manifests say "enabled_by_default", so the Mods tab shows them on
-    and one switch turns any of them off. An existing folder is never overwritten: the player's options and
-    the files a mod makes from their own disc stay."""
-    mods_root = os.path.join(user_config_dir(exe_dir), "ModManager", "Mods")
-    sources = []
-    for base in (os.path.join(PKG, "sdk", "bundled-mods"), os.path.join(PKG, "sdk", "guest-mods", "sd")):
-        if os.path.isdir(base):
-            sources += [os.path.join(base, d) for d in sorted(os.listdir(base))
-                        if os.path.isdir(os.path.join(base, d))]
-    if not sources:
-        return
+    """(this fork) the mods this release ships land where the runtime reads them, so they work at the first
+    start: sdk/bundled-mods/<id>/ (content replacements) go to the mod manager's Mods folder, and
+    sdk/guest-mods/sd/<id>/ to mods/<id> — the folder guest_builtin.cpp reads the package, options.json and
+    map data of a guest mod compiled into the game code from (runtime/src/mods/guest_builtin.cpp: mod_dir).
+    Their manifests say "enabled_by_default", so the Mods tab shows them on and one switch turns any off. An
+    existing folder is never overwritten: the player's options, and the files a mod makes from their own
+    disc, stay."""
+    config = user_config_dir(exe_dir)
+    places = [
+        (os.path.join(PKG, "sdk", "bundled-mods"), os.path.join(config, "ModManager", "Mods")),
+        (os.path.join(PKG, "sdk", "guest-mods", "sd"), os.path.join(config, "mods")),
+    ]
     copied, kept = [], []
-    for src in sources:
-        dst = os.path.join(mods_root, os.path.basename(src))
-        if os.path.exists(dst):
-            kept.append(os.path.basename(src))
+    for base, root in places:
+        if not os.path.isdir(base):
             continue
-        try:
-            os.makedirs(mods_root, exist_ok=True)
-            shutil.copytree(src, dst)
-            copied.append(os.path.basename(src))
-        except OSError as error:
-            LOG.write("bundled mod %s not installed: %s" % (os.path.basename(src), error))
+        for name in sorted(os.listdir(base)):
+            src = os.path.join(base, name)
+            if not os.path.isdir(src):
+                continue
+            dst = os.path.join(root, name)
+            if os.path.exists(dst):
+                kept.append(name)
+                continue
+            try:
+                os.makedirs(root, exist_ok=True)
+                shutil.copytree(src, dst)
+                copied.append(name)
+            except OSError as error:
+                LOG.write("bundled mod %s not installed: %s" % (name, error))
     if copied:
         say("  Mods: %s" % ", ".join(copied))
     if kept:
