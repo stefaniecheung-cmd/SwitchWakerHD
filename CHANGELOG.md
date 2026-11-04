@@ -14,6 +14,7 @@ what is on `devel` and not released yet (also in the
   `language_source_test` 两个测试目标编译 `fs.cpp` 时未把 `os_time.cpp` 加入源列表，导致链接报
   `undefined symbol`。已在 `CMakeLists.txt` 中将 `runtime/src/hle/os_time.cpp` 补入这两个目标。
 - **主程序 `wwhd` 不受影响。** 该符号缺失仅存在于测试目标，本次修复使完整构建（含 AppImage 打包）通过。
+- **修复 AppImage 安装报 `ModuleNotFoundError: fork_passes`。** 打包清单 `tools/release/package.py` 的 `TOOL_FILES` 只列了 6 个 `tools/recomp` 模块，漏了 fork 新增的 `fork_passes.py` 及其依赖 `calleeregs.py`、`singleflow.py`。安装向导在「翻译游戏代码」阶段 `import fork_passes` 会失败。已把这三个文件补进打包清单。
 
 ## v1.2.1（本 fork · 上游同步 + 中文化补齐）
 

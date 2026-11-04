@@ -48,6 +48,9 @@ TOOL_FILES = [
     "tools/recomp/builds.py",
     "tools/recomp/crlive.py",
     "tools/recomp/leaflocal.py",
+    "tools/recomp/fork_passes.py",  # recomp.py imports it (this fork)
+    "tools/recomp/calleeregs.py",   # leaflocal.py and fork_passes.py import it
+    "tools/recomp/singleflow.py",   # fork_passes.py imports it
     "tools/guestmod/build_guest_mod.py",
     "tools/guestmod/guestmod.py",
     "tools/story_mods/npc_catalogue.py",  # the NPC catalogue from the player's game files (story_npc_catalogue.h)
