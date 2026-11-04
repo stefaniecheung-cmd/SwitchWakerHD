@@ -80,8 +80,7 @@ bool hooks_checked(const WWHDGuestModuleV1& m, std::string& error) {
 }
 
 void load(const Install& install) {
-    if (begin() == end()) return;
-    if (!g_mod_hook_count) {
+    if (begin() == end()) return;    if (!g_mod_hook_count) {
         LOG("[guestmods] the NRO has guest mods but its game code no mod hooks: translate the game again with "
             "build/guest-mods/hooks.txt (WWHD_RECOMP_MOD_HOOKS_ONLY); no guest mod loaded");
         return;
@@ -120,6 +119,11 @@ void load(const Install& install) {
             g_status[b->id] = "";
         }
     }
+}
+
+bool has(const std::string& id) {
+    for (const WWHDGuestBuiltin* b = begin(); b != end(); ++b) if (id == b->id) return true;
+    return false;
 }
 
 std::vector<Mod>& list() {

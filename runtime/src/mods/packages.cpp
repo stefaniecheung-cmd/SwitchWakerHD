@@ -9,6 +9,7 @@
 #include "mod_hash.h"
 #include "catalogue_setup.h"
 #include "guest_build.h"
+#include "guest_builtin.h"
 #include "guest_addr.h"
 #include "guest_png.h"
 #include "guest_hud.h"
@@ -503,7 +504,26 @@ void load_traversal_options(const Value& options) {
     }
 }
 void defaults(){database=Value{};database["format_version"]=1;database["active"]="Default";auto& p=profile();save_fast_forward_options(p["builtin_options"]);save_move_speed_options(p["builtin_options"]);save_traversal_options(p["builtin_options"]);save_lock_on_options(p["builtin_options"]);p["builtin_options"]["quick-use.speed"]=double(quick_use_speed());p["enabled"].type=Value::Object;for(const auto& e:manager::entries())p["builtins"][e.id]=e.enabled();p["builtin_options"]["direct-camera.speed"]=double(camera_speed());p["builtin_options"]["mouse-camera.sensitivity"]=double(mouse_sensitivity());}
-void scan(){records.clear();if(!ready)return;fs::create_directories(root/"Mods");for(const auto& e:fs::directory_iterator(root/"Mods")){if(!e.is_directory()||e.is_symlink()||!id_ok(e.path().filename().string()))continue;Record r;r.path=e.path();try{r.manifest=manifest(e.path());require(r.manifest.id==e.path().filename(),"Folder and manifest IDs differ");}catch(const std::exception& ex){r.manifest.id=e.path().filename().string();r.manifest.name=r.manifest.id;r.manifest.problem=ex.what();}auto id=r.manifest.id;records.emplace(id,std::move(r));}}
+void scan(){
+    records.clear();if(!ready)return;
+    fs::create_directories(root/"Mods");
+    for(const auto& e:fs::directory_iterator(root/"Mods")){
+        if(!e.is_directory()||e.is_symlink()||!id_ok(e.path().filename().string()))continue;
+        // (this fork) a mod built into the game code (guest_builtin.h; its package is <config>/mods/<id>) does not
+        // belong in the mod manager: a copy here is built as a library module, which this port refuses, and it
+        // would list the same mod twice — once here as broken, once as built in. The built-in one runs; ignore
+        // this folder (the log names it).
+        if(guestbuiltin::has(e.path().filename().string())){
+            fprintf(stderr,"[mod-manager] %s: built into this port, the copy in %s is ignored\n",
+                    e.path().filename().string().c_str(),e.path().string().c_str());
+            continue;
+        }
+        Record r;r.path=e.path();
+        try{r.manifest=manifest(e.path());require(r.manifest.id==e.path().filename(),"Folder and manifest IDs differ");}
+        catch(const std::exception& ex){r.manifest.id=e.path().filename().string();r.manifest.name=r.manifest.id;r.manifest.problem=ex.what();}
+        auto id=r.manifest.id;records.emplace(id,std::move(r));
+    }
+}
 std::string source_warning(const std::vector<catalogue::Step>& steps) {
     catalogue::Sources sources(database.get("game_sources"));
     for(const auto& step:steps)if(!step.optional&&catalogue::uses_game_source(step,"gc_wind_waker")) {
@@ -943,7 +963,7 @@ static bool install_package(const std::string& source,std::string& error,std::st
         auto named=fs::path(source).lexically_normal();if(named.filename().empty())named=named.parent_path();
         if(content_name(named.filename().string())&&!named.parent_path().filename().empty())named=named.parent_path();
         if(graphics)cemu::import_legacy(stage,named.filename().string());else content::import_legacy(stage,named.filename().string());
-    }auto m=manifest(stage);require(m.problem.empty()||m.problem.starts_with("No binary for")||m.problem.starts_with("GLSL shader packs require Vulkan"),m.problem);target=root/"Mods"/m.id;auto it=records.find(m.id);if(fresh){std::error_code exists_error;require(it==records.end()&&!fs::exists(fs::symlink_status(target,exists_error)),"A mod with the ID "+m.id+" is installed already");}require(it==records.end()||(!wanted(m.id)&&!it->second.active&&!it->second.loading),it!=records.end()&&(it->second.manifest.kind=="content"||it->second.manifest.kind=="cemu"||it->second.manifest.kind=="guest")?"Disable this content mod and restart before updating":"Disable this mod and wait for it to unload before updating");fs::create_directories(target.parent_path());if(fs::exists(target)){fs::rename(target,backup);backed=true;}fs::rename(stage,target);moved=true;m=manifest(target);Record r;r.path=target;r.manifest=std::move(m);auto installed_id=r.manifest.id;records[installed_id]=std::move(r);if(installed_id_out)*installed_id_out=installed_id;if(backed){std::error_code cleanup;fs::remove_all(backup,cleanup);}dirty=true;
+    }auto m=manifest(stage);require(m.problem.empty()||m.problem.starts_with("No binary for")||m.problem.starts_with("GLSL shader packs require Vulkan"),m.problem);require(!guestbuiltin::has(m.id),"This mod is built into this port: there is nothing to install (it is in the built-in list)");target=root/"Mods"/m.id;auto it=records.find(m.id);if(fresh){std::error_code exists_error;require(it==records.end()&&!fs::exists(fs::symlink_status(target,exists_error)),"A mod with the ID "+m.id+" is installed already");}require(it==records.end()||(!wanted(m.id)&&!it->second.active&&!it->second.loading),it!=records.end()&&(it->second.manifest.kind=="content"||it->second.manifest.kind=="cemu"||it->second.manifest.kind=="guest")?"Disable this content mod and restart before updating":"Disable this mod and wait for it to unload before updating");fs::create_directories(target.parent_path());if(fs::exists(target)){fs::rename(target,backup);backed=true;}fs::rename(stage,target);moved=true;m=manifest(target);Record r;r.path=target;r.manifest=std::move(m);auto installed_id=r.manifest.id;records[installed_id]=std::move(r);if(installed_id_out)*installed_id_out=installed_id;if(backed){std::error_code cleanup;fs::remove_all(backup,cleanup);}dirty=true;
     }catch(...){if(moved)fs::remove_all(target);if(backed)fs::rename(backup,target);if(fs::exists(stage))fs::remove_all(stage);throw;}
 });}
 bool install(const std::string& source,std::string& error,std::string* installed_id_out){return install_package(source,error,installed_id_out,false);}

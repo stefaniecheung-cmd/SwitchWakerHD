@@ -32,6 +32,9 @@ what is on `devel` and not released yet (also in the
   玩家 Mods 目录，manifest 里的 `enabled_by_default` 让它们默认开启；Switch 端内容 mod 解压到
   `sdmc:/switch/wwhd/ModManager/Mods/` 即可（NRO 不写 SD 卡）。`guard.py` 对
   `sdk/bundled-mods/` 下的游戏文件树放行，其余检查不变。
+- **内置 mod 不再出现在社区 mod 列表。** `packages::scan` 跳过 id 与内置 mod 相同的文件夹（`<配置目录>/mods/<id>`
+  才是内置 mod 读包的位置，`ModManager/Mods/` 里的副本会被当成外部库 mod 构建，本 fork 一律拒绝，看起来
+  像「内置 mod 坏了」）；目录扫描时记一行日志说明，安装同 id 的包也会被直接拒掉。
 
 ## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
 
