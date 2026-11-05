@@ -91,6 +91,14 @@ def main(outdir, decomp_hooks=None):
         f.write("const RecompImport g_recomp_imports[] = {{0, 0, \"\", \"\", 0, 0}};\n")
         f.write("const unsigned g_recomp_import_count = 0;\n")
         f.write("const uint32_t g_recomp_entry_point = 0u; /* placeholder: matches no RPX */\n")
+        # The call counters (WWHD_RECOMP_COUNT_CALLS, #65) are empty here: stubgen translates no game
+        # code, so nothing is counted. recomp.py's table.c always carries this table (fork_passes.
+        # fork_count_table), and the Switch runtime's thread sampler reads it unconditionally
+        # (runtime/src/platform/thread_sampler_switch.cpp), so the placeholder build has to define it.
+        f.write("const unsigned g_recomp_count_n = 0;\n")
+        f.write("const uint32_t g_recomp_count_addrs[1] = {0u};\n")
+        f.write("const uint8_t g_recomp_count_inline[1] = {0};\n")
+        f.write("unsigned long long g_recomp_counts[1];\n")
         if decomp_hooks:
             f.write("const uint32_t g_recomp_decomp_kept[] = {0u};\nconst unsigned g_recomp_decomp_kept_count = 0;\n")
         # Hooks off: like recomp.py without --mod-hooks, emit no registration.
