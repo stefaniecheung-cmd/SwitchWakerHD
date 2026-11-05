@@ -96,7 +96,7 @@ jobs:
           # executables and they recompile shared sources many times over (guest_addr_identity.c 103x,
           # story_native_event_image.cpp 27x, mod_archive.cpp 20x...): building every target costs more
           # than the runtime itself, and none of those binaries are packaged.
-          time cmake --build build/rel --target wwhd wwhd-setup mod_package_test mod_manager_test guest_png_test
+          time cmake --build build/rel --target wwhd wwhd-setup mod_package_test mod_manager_test guest_png_test fan_translation_test
 
       - name: Package (release layout)
         run: |
