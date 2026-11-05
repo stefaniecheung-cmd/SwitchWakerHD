@@ -64,6 +64,13 @@ bool hidden_pane(uint32_t pane) {
 }
 }  // namespace screen_mode
 
+// (this fork) The hooks below are the Switch's single-screen mode: mods/one_screen.cpp hooks the same game
+// functions for the desktop/Android One screen mode (identical symbol set), and cmake/SwitchPort.cmake keeps
+// one_screen.cpp out of the Switch build. Both files were compiled into the desktop builds since the v1.2.1
+// sync, which failed the link with duplicate hook_/site_ symbols; gamepad_mode() is false there anyway, so
+// every hook below would return at once. Guard them to the Switch: the desktop keeps one_screen.cpp's.
+#ifdef __SWITCH__
+
 // file select: changeState(picker widget machine (widget+0x18), r4 = StateID_Display)
 extern "C" void site_0270AC04(Cpu* c) {
     if (c->r[4] != GD(0x1049AA74) || !gamepad_mode()) return;  // StateID_Display
@@ -183,3 +190,5 @@ extern "C" void hook_026D87D0(Cpu* c) {  // the Controller item's callback: its 
     f_026D87D0_orig(c);
     if (swap) values_to_reordered(win);
 }
+
+#endif  // __SWITCH__ (this fork: the desktop builds use mods/one_screen.cpp for these hooks)
