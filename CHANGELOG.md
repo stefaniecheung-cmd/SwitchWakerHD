@@ -39,6 +39,12 @@ what is on `devel` and not released yet (also in the
   内置 mod 的那版）被当作「游戏已安装」，玩家选「play」就跑的还是旧镜像的运行时与游戏代码——内置 mod
   页面因此是空的，gc-minimap 也报「native guest mods are not supported」。现在 `sdk/manifest.json` 记录
   构建来源（`release`，CI 为提交哈希），`install.json` 记下它，两者不同就提示 update 而不是直接启动。
+- **内置 mod 增加 The Story Notebook（`story-notebook` 0.6.1）。** 它是故事系统的必备包：内置后
+  `g_story_package` 在桌面端与 Switch 一样成立，笔记本、说书人的信和任务无需运行时加载 ELF 即可工作
+  （本 fork 拒绝外部 guest 模块）。两个 mod 共用 `daPy_Execute`（`0240EBB0`）这一个 hook，`registry.c`
+  列出两条记录（guest 内存 `0x7F000000` / `0x7F050000`，互不重叠）。Switch 端的包在
+  `wwhd-builtin-mods-sd.zip`（`switch/wwhd/mods/{gc-minimap,story-notebook}/`），桌面端安装器自动复制到
+  `~/.config/wwhd/mods/`。
 
 ## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
 

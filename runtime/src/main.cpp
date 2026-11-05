@@ -57,6 +57,7 @@
 #include "mods/mods.h"
 #include "platform/https.h"
 #include "mods/packages.h"
+#include "mods/guest_builtin.h"
 #include "mods/save_backup.h"
 #include "runtime.h"
 #include "mods/mods.h"
@@ -559,6 +560,9 @@ int main(int argc, char** argv) {
     mods::cemu::set_vulkan(render::requested()==render::Api::Vulkan);
     mods::content::set_game_root(config::game_dir);  // loose imports (fan translations) find their game path
     mods::packages::set_code_mod_support(guestmods::hooks_built() && mods::code::enabled());
+    // (this fork) the mods compiled into the game code (build/guest-mods/registry.c): the mod manager asks
+    // this table, so a second copy of one in ModManager/Mods is ignored instead of built and refused
+    mods::packages::set_builtin_query(&guestbuiltin::has);
     // game code with mod hooks while the code-mod setting is off: guest code mods stay unloaded, the port's own
     // hooked services (story mods, the editor's live edits) still run; without hooks guestmods::init says so
     if (guestmods::hooks_built() && !mods::code::enabled())

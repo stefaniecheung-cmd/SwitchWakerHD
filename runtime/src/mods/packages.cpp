@@ -9,7 +9,6 @@
 #include "mod_hash.h"
 #include "catalogue_setup.h"
 #include "guest_build.h"
-#include "guest_builtin.h"
 #include "guest_addr.h"
 #include "guest_png.h"
 #include "guest_hud.h"
@@ -513,7 +512,7 @@ void scan(){
         // belong in the mod manager: a copy here is built as a library module, which this port refuses, and it
         // would list the same mod twice — once here as broken, once as built in. The built-in one runs; ignore
         // this folder (the log names it).
-        if(guestbuiltin::has(e.path().filename().string())){
+        if(builtin_mod(e.path().filename().string())){
             fprintf(stderr,"[mod-manager] %s: built into this port, the copy in %s is ignored\n",
                     e.path().filename().string().c_str(),e.path().string().c_str());
             continue;
@@ -963,7 +962,7 @@ static bool install_package(const std::string& source,std::string& error,std::st
         auto named=fs::path(source).lexically_normal();if(named.filename().empty())named=named.parent_path();
         if(content_name(named.filename().string())&&!named.parent_path().filename().empty())named=named.parent_path();
         if(graphics)cemu::import_legacy(stage,named.filename().string());else content::import_legacy(stage,named.filename().string());
-    }auto m=manifest(stage);require(m.problem.empty()||m.problem.starts_with("No binary for")||m.problem.starts_with("GLSL shader packs require Vulkan"),m.problem);require(!guestbuiltin::has(m.id),"This mod is built into this port: there is nothing to install (it is in the built-in list)");target=root/"Mods"/m.id;auto it=records.find(m.id);if(fresh){std::error_code exists_error;require(it==records.end()&&!fs::exists(fs::symlink_status(target,exists_error)),"A mod with the ID "+m.id+" is installed already");}require(it==records.end()||(!wanted(m.id)&&!it->second.active&&!it->second.loading),it!=records.end()&&(it->second.manifest.kind=="content"||it->second.manifest.kind=="cemu"||it->second.manifest.kind=="guest")?"Disable this content mod and restart before updating":"Disable this mod and wait for it to unload before updating");fs::create_directories(target.parent_path());if(fs::exists(target)){fs::rename(target,backup);backed=true;}fs::rename(stage,target);moved=true;m=manifest(target);Record r;r.path=target;r.manifest=std::move(m);auto installed_id=r.manifest.id;records[installed_id]=std::move(r);if(installed_id_out)*installed_id_out=installed_id;if(backed){std::error_code cleanup;fs::remove_all(backup,cleanup);}dirty=true;
+    }auto m=manifest(stage);require(m.problem.empty()||m.problem.starts_with("No binary for")||m.problem.starts_with("GLSL shader packs require Vulkan"),m.problem);require(!builtin_mod(m.id),"This mod is built into this port: there is nothing to install (it is in the built-in list)");target=root/"Mods"/m.id;auto it=records.find(m.id);if(fresh){std::error_code exists_error;require(it==records.end()&&!fs::exists(fs::symlink_status(target,exists_error)),"A mod with the ID "+m.id+" is installed already");}require(it==records.end()||(!wanted(m.id)&&!it->second.active&&!it->second.loading),it!=records.end()&&(it->second.manifest.kind=="content"||it->second.manifest.kind=="cemu"||it->second.manifest.kind=="guest")?"Disable this content mod and restart before updating":"Disable this mod and wait for it to unload before updating");fs::create_directories(target.parent_path());if(fs::exists(target)){fs::rename(target,backup);backed=true;}fs::rename(stage,target);moved=true;m=manifest(target);Record r;r.path=target;r.manifest=std::move(m);auto installed_id=r.manifest.id;records[installed_id]=std::move(r);if(installed_id_out)*installed_id_out=installed_id;if(backed){std::error_code cleanup;fs::remove_all(backup,cleanup);}dirty=true;
     }catch(...){if(moved)fs::remove_all(target);if(backed)fs::rename(backup,target);if(fs::exists(stage))fs::remove_all(stage);throw;}
 });}
 bool install(const std::string& source,std::string& error,std::string* installed_id_out){return install_package(source,error,installed_id_out,false);}
@@ -980,6 +979,11 @@ uint64_t disk_use(const std::string& id){
 }
 bool has_code_mod_support(){std::lock_guard guard(mutex);return code_mod_support;}
 void set_code_mod_support(bool built){std::lock_guard guard(mutex);code_mod_support=built;}
+// (this fork) the built-in mod list (guest_builtin.h) registers here at startup (guest_builtin.cpp), so
+// nothing in this file has to link it: the mod-manager tests build packages.cpp alone.
+static BuiltinQuery g_builtin_query=nullptr;
+void set_builtin_query(BuiltinQuery query){g_builtin_query=query;}
+bool builtin_mod(const std::string& id){return g_builtin_query&&g_builtin_query(id);}
 bool needs_code_mod_support(const std::string& id){
     std::lock_guard guard(mutex);std::set<std::string> seen;
     std::function<bool(const std::string&)> visit=[&](const std::string& current){
