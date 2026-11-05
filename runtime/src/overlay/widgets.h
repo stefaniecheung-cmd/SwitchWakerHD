@@ -8,9 +8,15 @@
 namespace overlay::widgets {
 // a help text shown as a tooltip of the item before
 inline void help(const char* text) {
-    // (this fork) the text is passed through "%s", so ImGui's own hook cannot see it: translate it here
-    if (overlay::tooltip_hovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_ForTooltip))
-        ImGui::SetTooltip("%s", IMGUI_ZH_TR(text));
+    if (overlay::tooltip_hovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_ForTooltip)) {
+        // (this fork) the text is passed through "%s" elsewhere, so ImGui's own hook cannot see it:
+        // translate it here, and keep upstream's wrapped tooltip
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(std::max(1.f, std::min(ImGui::GetFontSize()*35.f, ImGui::GetMainViewport()->WorkSize.x-40.f)));
+        ImGui::TextUnformatted(IMGUI_ZH_TR(text));
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
 }
 // a grey note on its own wrapped lines
 inline void note(const char* fmt, ...) __attribute__((format(printf, 1, 2)));

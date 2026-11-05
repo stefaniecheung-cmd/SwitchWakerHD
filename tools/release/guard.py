@@ -65,7 +65,12 @@ PUBLIC_HEX = {b"0114020000000000c000000000000046",
               b"0123456789abcdef0123456789abcdef",
               # (this fork: the source zip) data words in upstream's tests: "Fix\0Scalable\0" in ASCII
               # (tools/story_mods/test_lyt.py) and a layout animation record (runtime/tools/demo_scene_test.cpp)
-              b"466978005363616c61626c6500000000", b"00000004000000003200773903000004"}
+              b"466978005363616c61626c6500000000", b"00000004000000003200773903000004",
+              # (this fork: the source zip) SDL controller GUIDs in upstream's tests (runtime/tools/input_map_test.cpp,
+              # button_glyphs_test.cpp, controller_setup_test.cpp): made-up ones and public vendor/product ids
+              b"03000000000000000000000000000001", b"03000000000000000000000000000002",
+              b"03000000000000000000000000000003", b"0300000000000000000000000000ffff",
+              b"030000005e0400008e02000014010000", b"050000004c050000e60c000000810000"}
 # a function body as tools/recomp/recomp.py emits it (stubgen placeholders call ppc_unimplemented)
 GEN_CODE = re.compile(rb"void f_[0-9A-F]{8}\(Cpu\* __restrict c\) \{\n")
 # and its translated instructions, each followed by its address and word (docs show a function's header only:
@@ -77,7 +82,7 @@ GEN_INSN = re.compile(rb"/\* [0-9A-F]{8}: [0-9A-F]{8} \*/")
 # the name rules for generated code skip them; every content check still applies
 VENDORED = re.compile(r"(^|/)runtime/third_party/")
 # (this fork: the source zip) the shader template's notes and pin, not a cache
-SHADERCACHE_DOCS = re.compile(r"(^|/)tools/shadercache/(README\.md|template\.ref)$")
+SHADERCACHE_DOCS = re.compile(r"(^|/)tools/shadercache/(README\.md|template\.ref|distill_template\.py)$")  # (this fork: distill_template.py, upstream's maintainer script)
 # (this fork: the source zip) "content/" paths of upstream's that are not game files: the empty placeholder of a
 # guest-mod example's content folder, and the Java stubs of Android's android.content package
 NOT_GAME_TREE = re.compile(r"(^|/)(examples/guest-mods/[^/]+/content/\.gitkeep|runtime/tools/[^/]+_stubs/android/content/[^/]+\.java)$")
@@ -336,12 +341,41 @@ def check_windows_manifest(name, data, problems):
         problems.append('%s: invalid Windows application manifest: %s' % (name, error))
 
 
+SEALED_TEMPLATE_MAGIC = b"WWHS0001"
+
+
+def open_sealed_template(data, key):
+    """The guard's own reader of a sealed template (shaderprep_format.seal): HMAC-SHA256 tag over magic + nonce +
+    ciphertext, then the SHAKE-256 keystream of key + nonce. The key is the release's template key
+    (WWHD_TEMPLATE_KEY, 64 hex digits: a hash of the game files the template is sealed for)."""
+    import hmac
+    if len(data) < 56 or len(data) > TEMPLATE_MAX_BYTES:
+        raise ValueError("invalid sealed template envelope")
+    nonce, tag, body = data[8:24], data[24:56], data[56:]
+    if not hmac.compare_digest(tag, hmac.new(key, data[:8] + nonce + body, hashlib.sha256).digest()):
+        raise ValueError("sealed template does not open with WWHD_TEMPLATE_KEY")
+    stream = hashlib.shake_256(b"WWHD shader template stream 1\0" + key + nonce).digest(len(body))
+    return bytes(a ^ b for a, b in zip(body, stream))
+
+
 def check_entry(name, data, problems):
     n = name.replace("\\", "/")
     if n.rsplit("/", 1)[-1].lower() in ("wwhd.exe", "wind waker hd.exe"):
         check_windows_manifest(name, data, problems)
     safe_template = False
-    if data.startswith(SAFE_TEMPLATE_MAGIC):
+    if data.startswith(SEALED_TEMPLATE_MAGIC):
+        # sealed (a key from the player's game files): checked as the code-free template it holds, or rejected
+        try:
+            key = os.environ.get("WWHD_TEMPLATE_KEY", "")
+            if len(key) != 64:
+                raise ValueError("a sealed template can only be checked with WWHD_TEMPLATE_KEY")
+            validate_code_free_template(open_sealed_template(data, bytes.fromhex(key)))
+            if not SAFE_TEMPLATE_PATH.fullmatch(n):
+                raise ValueError("code-free template outside approved package path")
+            safe_template = True
+        except (ValueError, TypeError, OverflowError, RecursionError, zlib.error) as error:
+            problems.append("%s: invalid sealed template: %s" % (name, error))
+    elif data.startswith(SAFE_TEMPLATE_MAGIC):
         try:
             validate_code_free_template(data)
             if not SAFE_TEMPLATE_PATH.fullmatch(n):
