@@ -21,7 +21,17 @@ what is on `devel` and not released yet (also in the
   函数清单）与上游的 `--randomizer/--expected-rpx-sha256`；`install.json` 同时记录 `sdk_release`
   （本 fork 的构建指纹）与 `randomizer`；`package.py` 工具清单合并双方（`fork_passes` 系 +
   上游 `rawstore.py`）；`widgets.h` 的帮助提示用上游的自动换行 tooltip，文案仍过 `IMGUI_ZH_TR`。
-- 上游 v1.2.0/v1.2.1 新增的菜单文案尚未翻译，会先以英文显示；后续补进 `zh_table.inc`。
+- 上游 v1.2.0/v1.2.1 新增的 21 条菜单文案已补进 `zh_table.inc`（1328 条，菜单覆盖率回到 100%）：
+  三颗珍珠、故事物品发放与备份提示、代码 mod 开关时的重编译提示、菜单音效、存档文件、`Link's name` 等。
+- **修 Switch 构建（占位游戏代码缺调用计数表）。** `thread_sampler_switch.cpp` 无条件读
+  `g_recomp_count_*`，而这些符号只有 `recomp.py`（`fork_passes.fork_count_table`）会写；Switch NRO 用的是
+  `stubgen.py` 的占位代码，链接时报 `undefined reference to g_recomp_count_n`。`stubgen.py` 现在写一份
+  n = 0 的空表，与 `recomp.py` 的输出同构。
+- **修桌面构建（重复 hook 符号）。** 上游的 `screen_mode.cpp` 与本 fork 的 `mods/one_screen.cpp` 定义了
+  同样九个 `hook_`/`site_` 入口（单屏 GamePad 模式）：`SwitchPort.cmake` 早就把 `one_screen.cpp` 排除在
+  Switch 构建外，但桌面构建两个都编，链接报 `duplicate symbol: hook_02618094`。桌面端 `gamepad_mode()`
+  恒为 false（这些 hook 会立刻返回），因此把 `screen_mode.cpp` 的 hook 收进 `__SWITCH__`，桌面继续用
+  `one_screen.cpp`；`screen_mode::` 命名空间（`aspect.cpp` 跨平台调用 `hidden_pane`）保持在守卫之外。
 
 ## v1.1.0-cn（本 fork · 对齐上游 v1.1.0 发布线）
 
