@@ -5,6 +5,24 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.2.1-cn（本 fork · 对齐上游 v1.2.1）
+
+- **同步上游 v1.2.1（`7ae6c2f`，合并提交 `41dc2cd`，上游新增 35 个提交）。** 要点：
+  - **v1.2.0 的性能工作**：每 pane 的快速路径（按键图标、HUD 隐藏、actor 绘制）、Switch 端 30 fps
+    剔除 hook、被提权的线程（`update_ubo`）也纳入采样、PGO 修复（devkitPro 头文件真实路径、Windows
+    下 profile 前缀用原生路径并输出 LF）。
+  - **游戏布局美术支持（HUD source 2）**：上游让 `WWHD_HUD_GAME` 真正可读（从安装的 2D 包读
+    `game_layouts`）。合并取上游实现，替换掉本 fork 此前的「本端口无此服务」提示——依赖游戏布局图的
+    mod（如 hd-minimap）的地图因此有图了。
+  - **安装器 update 模式与一键更新（#110/#113）**：记住上次安装选项，游戏内可检查更新。
+  - guest 线程 `pthread_create` 失败时报错并终止（#115）；FXAA/FSR1 后续修复（#95/#105）；
+    调用计数器（#65）；随机化游戏支持（安装器校验 rpx 哈希）。
+- **冲突取舍**：`setup.py` 的重编译同时保留本 fork 的 `WWHD_RECOMP_MOD_HOOKS_ONLY`（内置 mod 的
+  函数清单）与上游的 `--randomizer/--expected-rpx-sha256`；`install.json` 同时记录 `sdk_release`
+  （本 fork 的构建指纹）与 `randomizer`；`package.py` 工具清单合并双方（`fork_passes` 系 +
+  上游 `rawstore.py`）；`widgets.h` 的帮助提示用上游的自动换行 tooltip，文案仍过 `IMGUI_ZH_TR`。
+- 上游 v1.2.0/v1.2.1 新增的菜单文案尚未翻译，会先以英文显示；后续补进 `zh_table.inc`。
+
 ## v1.1.0-cn（本 fork · 对齐上游 v1.1.0 发布线）
 
 > 版本命名自本次起与上游对齐：`v<上游版本>-cn`。此前本 fork 用过 `v1.2.0` / `v1.2.1` / `v1.2.2`
