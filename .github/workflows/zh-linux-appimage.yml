@@ -91,7 +91,12 @@ jobs:
             -DGEN_DIR="$PWD/build/gen-stub" -DWWHD_BUNDLED_DEPS=ON -DWWHD_SETUP_GUI=ON \
             -DCMAKE_PREFIX_PATH="$HOME/sdl3" -DVulkan_INCLUDE_DIR="$HOME/vulkan/include" \
             -DVulkan_LIBRARY="/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
-          cmake --build build/rel
+          # Only the two binaries the AppImage ships, plus the mod tests that guard this fork's own
+          # additions (packages.cpp scan/install rules, guest mod packages). The tree defines ~470 test
+          # executables and they recompile shared sources many times over (guest_addr_identity.c 103x,
+          # story_native_event_image.cpp 27x, mod_archive.cpp 20x...): building every target costs more
+          # than the runtime itself, and none of those binaries are packaged.
+          time cmake --build build/rel --target wwhd wwhd-setup mod_package_test mod_manager_test guest_png_test
 
       - name: Package (release layout)
         run: |
