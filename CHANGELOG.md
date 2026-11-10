@@ -5,6 +5,17 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.2.2-cn（本 fork · 对齐上游 v1.2.2）
+
+- **同步上游 v1.2.2（合并上游 5 个提交）。** 全部是渲染与发布前的修复，无新增菜单文案，`zh_table.inc`
+  的菜单覆盖率保持 100%：
+  - **修 RGBA8 纹理经阴影采样器读取的问题（#126）**：RGBA8 纹理被阴影采样器读取时，作为红通道的
+    深度图处理（`dk_surfaces.h` / `formats.cpp` / `surfaces.cpp`）。
+  - **修 PGO 构建的崩溃（#126）**：编译参数去掉 `-freorder-blocks-and-partition`——冷热分区后冷代码
+    里的异常会终止游戏（`SwitchPgo.cmake`）。
+  - **shader 模板更新到 8,965 states**（比 v1.2.1 多 400 个，来自测试主机的录制），版本固定为 v1.2.2。
+- **版本号 `v1.2.1-cn` → `v1.2.2-cn`**（`zh-linux-appimage.yml` 的 `VERSION`）。
+
 ## v1.2.1-cn（本 fork · 对齐上游 v1.2.1）
 
 - **同步上游 v1.2.1（`7ae6c2f`，合并提交 `41dc2cd`，上游新增 35 个提交）。** 要点：
