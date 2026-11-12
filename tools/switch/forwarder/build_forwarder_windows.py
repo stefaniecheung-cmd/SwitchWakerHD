@@ -60,7 +60,7 @@ ENV = read_env(os.path.join(FDIR, "forwarder.env"))
 # the same override as build_forwarder.sh
 TITLE_ID = re.sub(r"^0[xX]", "", os.environ.get("WWHD_FORWARDER_TITLE_ID", ENV["TITLE_ID"])).lower()
 NRO_PATH = "sdmc:/switch/wwhd/wwhd.nro"
-NAME, PUBLISHER = "Wind Waker HD", "SwitchWakerHD"
+NAME, PUBLISHER = "Switch Wind Waker HD", "stefanie"
 HBLOADER = (ENV["HBLOADER_URL"], ENV["HBLOADER_COMMIT"])
 HACBREWPACK = (ENV["HACBREWPACK_URL"], ENV["HACBREWPACK_COMMIT"])
 LANGS = ["AmericanEnglish", "BritishEnglish", "Japanese", "French", "German", "LatinAmericanSpanish", "Spanish",
@@ -253,7 +253,7 @@ cd "$(cygpath -u "$HBP")" && cp config.mk.template config.mk && (make -s >/dev/n
     run([sys.executable, "-I", os.path.join(fdir, "make_nacp.py"), os.path.join(pack, "control", "control.nacp"),
          "--title-id", TITLE_ID, "--name", NAME, "--author", PUBLISHER, "--version", version])
     icon = os.path.join(out, "icon.jpg")
-    run([sys.executable, "-I", os.path.join(fdir, "make_icon.py"), icon_src, icon])
+    run([sys.executable, os.path.join(fdir, "make_icon.py"), icon_src, icon])  # no -I: Pillow lives in the user site-packages on this machine
     for lang in LANGS:
         shutil.copyfile(icon, os.path.join(pack, "control", "icon_%s.dat" % lang))
 

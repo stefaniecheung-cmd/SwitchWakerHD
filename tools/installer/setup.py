@@ -1618,6 +1618,15 @@ def decomp_hooks_file():
     return p if os.path.isfile(p) else None
 
 
+def builtin_mod_hooks():
+    """(this fork) the game functions the release's built-in guest mods hook (sdk/guest-mods/hooks.txt, written
+    by tools/switch/guest_mods.py). The game code is translated with that list (recomp.py reads
+    WWHD_RECOMP_MOD_HOOKS_ONLY), so the mods' flag check is in those functions only; the mods themselves are
+    compiled in by compile_gamecode. None without built-in mods."""
+    p = os.path.join(PKG, "sdk", "guest-mods", "hooks.txt")
+    return p if os.path.isfile(p) else None
+
+
 def recompile(game_dir, gen_dir, hooks=False):
     shutil.rmtree(longpath(gen_dir), ignore_errors=True)
     rpx = os.path.join(game_dir, "code", "cking.rpx")
@@ -1629,10 +1638,17 @@ def recompile(game_dir, gen_dir, hooks=False):
         if build is not None and not build.canonical:
             raise SetupError("this is the decomp build of the port, which works with the USA game only (yours is the %s "
                              "build); use the regular release" % build.name)
+    env = dict(os.environ, WWHD_RECOMP_MOD_HOOKS="0")
+    mod_hooks = builtin_mod_hooks()
+    env.pop("WWHD_RECOMP_MOD_HOOKS_ONLY", None)
+    if mod_hooks and not hooks:
+        # (this fork) the built-in mods' functions only, unless the player turned code mods on (--mod-hooks:
+        # every function checked, which the built-in mods' list is a subset of)
+        env["WWHD_RECOMP_MOD_HOOKS_ONLY"] = mod_hooks
     out = run_logged([sys.executable, os.path.join(PKG, "tools", "recomp", "recomp.py"), rpx, gen_dir] +
                      (["--mod-hooks"] if hooks else []) + (["--decomp-hooks", decomp] if decomp else []) +
                      (["--randomizer", "--expected-rpx-sha256", build.sha256] if randomized else []),
-                     env=dict(os.environ, WWHD_RECOMP_MOD_HOOKS="0"), what="translating the game code")
+                     env=env, what="translating the game code")
     n = len(glob.glob(os.path.join(glob.escape(gen_dir), "code_*.c")))
     if n == 0:
         raise SetupError("the recompiler wrote no code")
@@ -1739,6 +1755,12 @@ def compile_gamecode(tc, manifest, gen_dir, obj_dir, jobs, cancel=None, progress
     os.makedirs(obj_dir, exist_ok=True)
     srcs = sorted(glob.glob(os.path.join(glob.escape(gen_dir), "code_*.c")))
     srcs += [os.path.join(gen_dir, f) for f in ("table.c", "imports.c")]
+    # (this fork) the guest mods built into the game code (sdk/guest-mods, from tools/switch/guest_mods.py):
+    # compiled with the game code's flags; registry.c is the list guest_builtin.cpp loads
+    mods_dir = os.path.join(PKG, "sdk", "guest-mods")
+    if os.path.isfile(os.path.join(mods_dir, "registry.c")):
+        srcs += [os.path.join(mods_dir, "registry.c")]
+        srcs += sorted(glob.glob(os.path.join(glob.escape(mods_dir), "mod_*.c")))
     srcs.sort(key=lambda s: -os.path.getsize(s))  # big files first: better use of the cores
     m = {"sdk": fwd(os.path.join(PKG, "sdk")), "gen": fwd(gen_dir)}
     flags = [sub(a, m) for a in gamecode_compile_flags(manifest)]
@@ -2618,6 +2640,59 @@ def prepare_shaders_nonfatal(*args, **kwargs):
         return dict(status="failed", message=str(error))
 
 
+def user_config_dir(exe_dir):
+    """host::config_dir() (runtime/src/platform/host.h): where the runtime keeps settings, the mod manager and
+    its Mods/ folder. In portable mode that is user/ next to the release folder (portable.txt), which install()
+    writes before this is first called."""
+    override = os.environ.get("WWHD_USER_DIR")
+    if override:
+        return override
+    if PORTABLE or os.path.isfile(os.path.join(exe_dir, "portable.txt")):
+        return os.path.normpath(os.path.join(exe_dir, os.pardir, "user"))
+    if IS_WIN:
+        return os.path.join(os.environ.get("APPDATA") or ".", "WWHD")
+    if IS_MAC:
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "WWHD")
+    return os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "wwhd")
+
+
+def install_bundled_mods(exe_dir):
+    """(this fork) the mods this release ships land where the runtime reads them, so they work at the first
+    start: sdk/bundled-mods/<id>/ (content replacements) go to the mod manager's Mods folder, and
+    sdk/guest-mods/sd/<id>/ to mods/<id> — the folder guest_builtin.cpp reads the package, options.json and
+    map data of a guest mod compiled into the game code from (runtime/src/mods/guest_builtin.cpp: mod_dir).
+    Their manifests say "enabled_by_default", so the Mods tab shows them on and one switch turns any off. An
+    existing folder is never overwritten: the player's options, and the files a mod makes from their own
+    disc, stay."""
+    config = user_config_dir(exe_dir)
+    places = [
+        (os.path.join(PKG, "sdk", "bundled-mods"), os.path.join(config, "ModManager", "Mods")),
+        (os.path.join(PKG, "sdk", "guest-mods", "sd"), os.path.join(config, "mods")),
+    ]
+    copied, kept = [], []
+    for base, root in places:
+        if not os.path.isdir(base):
+            continue
+        for name in sorted(os.listdir(base)):
+            src = os.path.join(base, name)
+            if not os.path.isdir(src):
+                continue
+            dst = os.path.join(root, name)
+            if os.path.exists(dst):
+                kept.append(name)
+                continue
+            try:
+                os.makedirs(root, exist_ok=True)
+                shutil.copytree(src, dst)
+                copied.append(name)
+            except OSError as error:
+                LOG.write("bundled mod %s not installed: %s" % (name, error))
+    if copied:
+        say("  Mods: %s" % ", ".join(copied))
+    if kept:
+        LOG.write("bundled mods already installed: " + ", ".join(kept))
+
+
 def install(ctx, source, keys=None, info=None, ui=None, check_keys=None):
     """The whole build for one source: ("image", path) | ("archive", path) | ("folder", path) |
     ("installed", game_dir) | ("gen", generated C). check_keys(image) -> (keys, info) is called for an image without keys.
@@ -2760,6 +2835,10 @@ def install(ctx, source, keys=None, info=None, ui=None, check_keys=None):
              "installed": time.strftime("%Y-%m-%d %H:%M:%S"), "toolchain": manifest["toolchain"],
              "placeholder_code": kind == "gen",
              "code_mods": code_mods.hooks_option(getattr(args, "code_mods", None))}
+    if manifest.get("release"):
+        # (this fork) which build of this version was installed: a rebuilt release of the same
+        # version has another id, and the setup offers that update instead of "already installed"
+        state["sdk_release"] = manifest["release"]
     if compiled_randomizer:
         state["randomizer"] = compiled_randomizer
     if manifest.get("variant"):
@@ -2796,6 +2875,8 @@ def install(ctx, source, keys=None, info=None, ui=None, check_keys=None):
             windows_shortcuts(data_dir, exe)
             say("  Shortcuts: Start menu and desktop (\"%s\")" % APP_NAME)
     if kind != "gen":
+        # (this fork) after portable.txt: in portable mode the Mods folder is user/ModManager/Mods
+        install_bundled_mods(exe_dir)
         try:
             code_mods.remember_installed(sys.modules[__name__], ctx, tc, state["code_mods"], state["exe"], gen_dir, objs)
         except (OSError, SetupError) as e:
@@ -3015,6 +3096,11 @@ def run(args, ui):
     say("Install folder: %s" % data_dir)
     state = ctx.state()
     installed = ctx.installed()
+    # (this fork) sdk/manifest.json records the build this release came from: same version string but
+    # another build (a rebuilt v1.1.0-cn) must offer an update, or the player keeps running the game
+    # code and runtime of the image they installed first (no new features, no new built-in mods)
+    release = ctx.manifest.get("release") or ""
+    same_release = not release or state.get("sdk_release") == release
     if getattr(args, "decomp", None) and not decomp_offered(ctx.manifest):
         raise SetupError("the decomp version is offered on macOS in development builds only (docs/decomp-build.md)")
     if getattr(args, "start_decomp", None) is not None:
@@ -3051,9 +3137,14 @@ def run(args, ui):
         source = ("installed", game_dir)
     elif installed and ui.interactive:
         say("")
-        if state.get("version") != version:
-            say("Installed: %s. This release: %s." % (state.get("version"), version))
-            i = ui.choose("What do you want to do?", ["update to %s (keeps your game files and saves)" % version,
+        if state.get("version") != version or not same_release:
+            if state.get("version") != version:
+                say("Installed: %s. This release: %s." % (state.get("version"), version))
+            else:
+                say("Installed: %s, an earlier build of this release (%s). This one is %s." %
+                    (version, state.get("sdk_release") or "before builds had an id", release or "a source build"))
+            i = ui.choose("What do you want to do?", ["update to this build (rebuilds the game code; keeps your "
+                                                      "game files and saves)",
                                                       "play the installed version", "quit"])
             if i == 1:
                 launch(state, data_dir)
@@ -3078,12 +3169,14 @@ def run(args, ui):
                 return 0
             if i == 1:
                 source = ("installed", game_dir)
-    elif installed and not ui.interactive and state.get("version") == version:
+    elif installed and not ui.interactive and state.get("version") == version and same_release:
         say("Already installed (%s)." % version)
         if not args.no_launch:
             launch(state, data_dir)
         return 0
     elif valid_game_folder(game_dir) and not ui.interactive:
+        if installed and not same_release:
+            say("Installed: %s, an earlier build of this release. Updating (rebuilds the game code)." % version)
         source = ("installed", game_dir)
     if source is None:
         if valid_game_folder(game_dir) and ui.yesno("Game files from an earlier setup were found in %s. Use them?" % game_dir):

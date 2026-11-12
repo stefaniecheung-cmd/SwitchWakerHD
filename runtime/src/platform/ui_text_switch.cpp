@@ -1,6 +1,8 @@
 // The fork's own on-screen texts in the game's language (ui_text_switch.h).
 #include "ui_text_switch.h"
 
+#include "zh_tr.h"
+
 #include <switch.h>
 
 #include <cstdint>
@@ -1541,8 +1543,15 @@ const MenuTexts* choose_menu() {
 long language_code() { return language(); }
 
 const Texts& tx() {
-    static const Texts* t = choose();
-    return *t;
+    // this build's Chinese interface: every field goes through the table (a field it leaves out stays English)
+    static const Texts t = [] {
+        static_assert(sizeof(Texts) % sizeof(const char*) == 0, "Texts holds only const char* fields");
+        Texts out = *choose();
+        auto* dst = reinterpret_cast<const char**>(&out);
+        for (size_t i = 0; i < sizeof out / sizeof(const char*); i++) dst[i] = wwhd_zh_tr(dst[i]);
+        return out;
+    }();
+    return t;
 }
 
 const MenuTexts& menu() {
@@ -1554,6 +1563,7 @@ const MenuTexts& menu() {
         auto* en = reinterpret_cast<const char* const*>(&kMenuEnglish);
         for (size_t i = 0; i < sizeof out / sizeof(const char*); i++)
             if (!dst[i]) dst[i] = en[i];
+        for (size_t i = 0; i < sizeof out / sizeof(const char*); i++) dst[i] = wwhd_zh_tr(dst[i]);
         return out;
     }();
     return m;

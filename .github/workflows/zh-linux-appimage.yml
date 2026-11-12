@@ -1,0 +1,169 @@
+# Chinese-interface Linux build (this fork): the same runtime the v0.5.0 release ships, built from this
+# branch with WWHD_ZH_UI (runtime/src/platform/zh_tr.cpp + zh_table.inc) and the CJK font loader in
+# runtime/src/overlay/overlay.cpp, packaged as a Linux x86_64 AppImage.
+# Started only by hand (Actions tab, "Run workflow"). No game files are used: the game code comes from
+# tools/recomp/stubgen.py, as in linux.yml.
+name: zh-linux-appimage
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_only:
+        description: "Only publish an existing build artifact to a Release (skip the build)"
+        required: false
+        default: "false"
+      artifact_run_id:
+        description: "Run id that produced the zh-appimage artifact (publish_only)"
+        required: false
+        default: ""
+      release_tag:
+        description: "Release tag to attach the AppImage + zip to (publish_only)"
+        required: false
+        default: ""
+
+jobs:
+  build:
+    if: ${{ inputs.publish_only != 'true' }}
+    runs-on: ubuntu-22.04
+    env:
+      # The fork's version follows the upstream release it is synced to, with a -cn suffix: the
+      # upstream v1.3.0 tree plus the Chinese interface is v1.3.0-cn. Bump it when upstream is merged again.
+      VERSION: v1.3.0-cn
+      ARCH: x86_64
+      TOOLCHAIN: zig-0.16.0
+      SDL3_URL: https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+      SDL3_SHA256: 9c75cf16330322c217dedd2e0609f1124f1b54b8633e763467b4684d0f4334a3
+      VULKAN_HEADERS_URL: https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v1.4.363.tar.gz
+      VULKAN_HEADERS_SHA256: cbaf687d3c59b9666fe080e7f8396b6b4f4d344a768ee6b337c59852f4526b68
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang cmake ninja-build pkg-config xz-utils file libcurl4-openssl-dev \
+            libvulkan1 libvulkan-dev glslang-dev glslang-tools libasound2-dev libpulse-dev libaudio-dev libfribidi-dev \
+            libjack-dev libsndio-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev \
+            libxss-dev libxtst-dev libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev wayland-protocols \
+            mesa-vulkan-drivers xvfb python3-pil
+
+      - name: Pinned zig toolchain (tools/installer/toolchains.json)
+        run: |
+          read -r URL SUM DIR TARGET < <(python3 -c "
+          import json, os; t=json.load(open('tools/installer/toolchains.json'))['toolchains'][os.environ['TOOLCHAIN']]
+          print(t['url'], t['sha256'], t['dir'], t['target'])")
+          curl -fsSL -o "$RUNNER_TEMP/zig.tar.xz" "$URL"
+          echo "$SUM  $RUNNER_TEMP/zig.tar.xz" | sha256sum -c -
+          tar -xf "$RUNNER_TEMP/zig.tar.xz" -C "$RUNNER_TEMP"
+          ZIG="$RUNNER_TEMP/$DIR/zig"
+          mkdir -p "$RUNNER_TEMP/zbin"
+          printf '#!/bin/sh\nexec "%s" cc -target %s "$@"\n' "$ZIG" "$TARGET" > "$RUNNER_TEMP/zbin/zcc"
+          printf '#!/bin/sh\nexec "%s" c++ -target %s "$@"\n' "$ZIG" "$TARGET" > "$RUNNER_TEMP/zbin/zcxx"
+          printf '#!/bin/sh\nexec "%s" ar "$@"\n' "$ZIG" > "$RUNNER_TEMP/zbin/zar"
+          printf '#!/bin/sh\nexec "%s" ranlib "$@"\n' "$ZIG" > "$RUNNER_TEMP/zbin/zranlib"
+          chmod +x "$RUNNER_TEMP"/zbin/*
+          echo "ZBIN=$RUNNER_TEMP/zbin" >> "$GITHUB_ENV"
+          echo "ZIG_GLOBAL_CACHE_DIR=$RUNNER_TEMP/zig-cache" >> "$GITHUB_ENV"
+
+      - name: "SDL3 (shared library, built with the system compiler; zig's libc headers clash with liburing)"
+        run: |
+          curl -fsSL -o sdl3.tar.gz "$SDL3_URL"
+          echo "$SDL3_SHA256  sdl3.tar.gz" | sha256sum -c -
+          tar -xzf sdl3.tar.gz
+          cmake -S SDL3-3.4.18 -B sdl3-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="$HOME/sdl3"
+          cmake --build sdl3-build
+          cmake --install sdl3-build
+
+      - name: Vulkan headers (pinned)
+        run: |
+          curl -fsSL -o vh.tar.gz "$VULKAN_HEADERS_URL"
+          echo "$VULKAN_HEADERS_SHA256  vh.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/vulkan" && tar -xzf vh.tar.gz -C "$HOME/vulkan" --strip-components=1
+
+      - name: Build runtime (Release, Vulkan + SDL3) with placeholder guest code
+        run: |
+          python3 tools/recomp/stubgen.py build/gen-stub
+          cmake -S . -B build/rel -G Ninja -DCMAKE_BUILD_TYPE=Release -DWWHD_VERSION="$VERSION" \
+            -DCMAKE_C_COMPILER="$ZBIN/zcc" -DCMAKE_CXX_COMPILER="$ZBIN/zcxx" \
+            -DCMAKE_AR="$ZBIN/zar" -DCMAKE_RANLIB="$ZBIN/zranlib" \
+            -DGEN_DIR="$PWD/build/gen-stub" -DWWHD_BUNDLED_DEPS=ON -DWWHD_SETUP_GUI=ON \
+            -DCMAKE_PREFIX_PATH="$HOME/sdl3" -DVulkan_INCLUDE_DIR="$HOME/vulkan/include" \
+            -DVulkan_LIBRARY="/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
+          # wwhd + wwhd-setup are the AppImage's binaries; wwhd-extract and wwhd_yaz0 are the tools
+          # package.py copies into the release (tools/bin, tools/lib); the four tests guard this fork's
+          # own additions and the PR #123 link fix. Everything else (465 more test executables, which
+          # recompile shared sources up to 103x) is skipped: a full 'cmake --build' spent 53-83 minutes
+          # in this step, this list takes ~11.
+          time cmake --build build/rel --target wwhd wwhd-setup wwhd-extract wwhd_yaz0 \
+            mod_package_test mod_manager_test guest_png_test fan_translation_test
+
+      - name: Package (release layout)
+        run: |
+          python3 tools/release/package.py --build build/rel --platform "linux-$ARCH" --version "$VERSION" \
+            --out dist --toolchain "$TOOLCHAIN" --setup-gui build/rel/wwhd-setup \
+            --runtime-file "$HOME/sdl3/lib/libSDL3.so.0" \
+            --linkonly-lib "/usr/lib/x86_64-linux-gnu/libvulkan.so.1"
+
+      - name: Guard (no game code, game files or keys)
+        run: python3 tools/release/guard.py dist/*.zip
+
+      - name: AppImage
+        run: |
+          python3 tools/release/appimage.py dist/WindWakerHD-*/ --out dist
+          ls -la dist
+
+      - name: Unpack and look for the Chinese texts
+        run: |
+          APP=$(ls dist/*.AppImage | head -1)
+          echo "APP=$APP"
+          (cd "$RUNNER_TEMP" && "$GITHUB_WORKSPACE/$APP" --appimage-extract >/dev/null)
+          BIN=$(find "$RUNNER_TEMP/squashfs-root" -maxdepth 3 -name 'wind-waker-hd' -type f | head -1)
+          echo "BIN=$BIN"
+          python3 - "$BIN" <<'PY'
+          import sys
+          data = open(sys.argv[1], 'rb').read()
+          zh = data.count('的'.encode()) + data.count('设'.encode()) + data.count('存'.encode())
+          print('bytes:', len(data), 'chinese markers:', zh)
+          assert zh > 50, 'the Chinese table does not seem to be in the binary'
+          print('ok')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zh-appimage
+          path: dist/*
+          retention-days: 7
+
+  # Copies an existing build artifact into a Release's assets so it can be downloaded
+  # directly from the Releases page (artifacts themselves expire and never show there).
+  # Dispatch with publish_only=true, artifact_run_id=<run that built zh-appimage>,
+  # release_tag=<e.g. v1.1.0-cn>.
+  publish:
+    if: ${{ inputs.publish_only == 'true' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Download the artifact from the build run
+        run: |
+          gh run download "${{ inputs.artifact_run_id }}" -R "$REPO" -n zh-appimage -D out
+          echo "--- files ---"
+          find out -maxdepth 2 -type f -printf '%s\t%p\n' | sort -k2
+
+      - name: Attach the AppImage and zip to the release
+        run: |
+          TAG="${{ inputs.release_tag }}"
+          gh release view "$TAG" -R "$REPO" >/dev/null
+          find out -maxdepth 2 -type f \( -name '*.AppImage' -o -name '*.zip' \) -print0 \
+            | while IFS= read -r -d '' f; do
+                echo "uploading: $f"
+                gh release upload "$TAG" "$f" -R "$REPO" --clobber
+              done
+          echo "--- release assets now ---"
+          gh release view "$TAG" -R "$REPO" --json assets -q '.assets[] | "\(.name)\t\(.size)"'

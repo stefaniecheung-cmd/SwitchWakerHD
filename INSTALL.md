@@ -5,6 +5,11 @@ comes with it**: you build it on your computer from your own copy of the game, w
 the result to the SD card. What you build contains the game, so it is for your own console only: do not
 share it.
 
+> **⚠️ 必须安装并使用 forwarder（HOME 屏图标）启动游戏。** 游戏**只能**通过 forwarder 图标启动；从
+> hbmenu / Sphaira 直接启动会在退出时崩溃并弹出「软件已关闭」窗口。forwarder 的安装是**必需步骤**，
+> 不是可选：见 [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md) 和下文
+> [第 4 步](#4-play)。
+
 ## Windows: Easy Installer (recommended)
 
 On **Windows 10/11**, an automatic installer handles everything for you: its own Python, the Switch tools, the
@@ -18,8 +23,8 @@ the PC.
 2. Accept the UAC prompt.
 3. Pick your game dump: a Cemu archive (`.wua`), a disc image (`.wux`/`.wud`, with its keys), or an
    extracted folder.
-   Optional, for a **HOME-screen icon**: choose your console's `prod.keys` (dumped with Lockpick_RCM; they are
-   read where they are, never copied). The installer then also sets up devkitPro (the icon is still built with it),
+   **Required, for the HOME-screen icon (this is how the game is started)**: choose your console's `prod.keys`
+   (dumped with Lockpick_RCM; they are read where they are, never copied). The installer then also sets up devkitPro (the icon is still built with it),
    Git and MSYS2's gcc and builds
    the forwarder `.nsp` ([details](tools/switch/forwarder/INSTALL.md)); it travels in `NSP\` with the rest: install it with
    DBI (*Browse SD card > NSP > wwhd_forwarder.nsp > Install*; it needs current Atmosphère sigpatches).
@@ -87,7 +92,7 @@ tools](#the-switch-tools-pinned), downloads the release, builds the game nativel
    starts open directly.
 3. Pick your game dump (a `.wua`, a `.wux`/`.wud` with its keys, or an extracted folder), and if you like the
    **GameCube sea minimap** (your own GameCube Wind Waker: `.iso`, `.gcm`, `.rvz` or its folder), **Brazilian
-   Portuguese** (the translation you downloaded) and the **HOME-screen icon** (your console's `prod.keys`), as on
+   Portuguese** (the translation you downloaded) and the **HOME-screen icon** (required: your console's `prod.keys`), as on
    Windows above; **Prepare the graphics now** is ticked by
    default there too. You can also drag the game onto the window.
 4. Press **Install**. On the way:
@@ -187,10 +192,10 @@ Do this once, and then run step 2 below in a normal PowerShell or Command Prompt
 A Cemu `.wua` archive works directly, with no keys: `python tools/switch/make_sd.py --wua "C:\path\game.wua"`.
 The first build takes 10 to 30 minutes.
 
-**HOME-screen icon (optional).** After the game has built, `make_sd.py` also builds the forwarder `.nsp`
+**HOME-screen icon (required).** After the game has built, `make_sd.py` also builds the forwarder `.nsp`
 ([tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md)) when it finds your console's own
 `prod.keys`: put the file in `%USERPROFILE%\.switch\` (not in the release folder), or pass `--keys "D:\path\prod.keys"`. Without
-keys that step is skipped and the game builds as usual (`--no-forwarder` skips it always). With the
+keys that step is skipped, and the game then has **no supported way to start it** (`--no-forwarder` skips it always). With the
 [pinned Switch tools](#the-switch-tools-pinned) (the default) it needs only `python -m pip install pillow` more; with
 `--toolchain devkitpro` also [Git](https://git-scm.com/download/win) and, in the same MSYS2 window, `pacman -S gcc`.
 The `.nsp` ends up in `build\forwarder\` and in `build\sd\NSP\`.
@@ -338,12 +343,14 @@ Copy the **contents** of `build/sd/` to the root of the SD card, so the game end
 
 ## 4. Play
 
-- Start the Homebrew Menu **in title mode**: hold **R** while starting any installed game, then pick
-  **SwitchWakerHD**. From the album (applet mode) the game does not get enough memory.
-- Optional: a HOME-screen icon that always starts it the right way:
-  [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md).
-- The first time you visit a place, new graphics are compiled in the background: an object may appear a
-  moment late. They are kept, so it happens only once per console.
+> **你必须从 HOME 屏的 forwarder 图标启动游戏**（详见
+> [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md)）。这是**唯一受支持的启动方式**：
+> 通过 hbmenu / Sphaira（按住 **R** 进入 title mode 或从相册进入 applet mode）直接启动游戏，退出时会因
+> code-memory 卸载竞争而崩溃并弹出「软件已关闭」错误窗口（错误码 0xD401）。forwarder 以 application
+> 类型启动游戏，退出时干净地回到 HOME 菜单，不弹窗、不崩溃。
+
+- 安装 forwarder 后，在 HOME 屏点击 **「Wind Waker HD」** 图标即可启动。
+- 第一次到访某地时，新图形会在后台编译：某个物体可能晚一点才出现。它们会被缓存，所以每台主机只需编译一次。
 
 ### Controls
 

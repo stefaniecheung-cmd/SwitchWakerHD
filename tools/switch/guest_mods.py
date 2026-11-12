@@ -313,14 +313,29 @@ def run_setup(man, pkg, data, gc_game, python):
         if kind == "game_path":
             if st.get("game") != "gc_wind_waker":
                 raise Fail("%s: setup needs %s, which this script cannot give" % (man["id"], st.get("game")))
-            if not gc_game:
-                raise Fail("%s needs your GameCube Wind Waker (.iso, .gcm, .rvz or an extracted folder): --gc-game PATH"
-                           % man["id"])
-            games["gc_wind_waker"] = os.path.abspath(gc_game)
+            # (this fork) not fatal here: if every run_tool that uses the game turns out skippable
+            # (its outputs are already prepared), the source is never needed
+            if gc_game:
+                games["gc_wind_waker"] = os.path.abspath(gc_game)
+            else:
+                games["gc_wind_waker"] = None
         elif kind == "run_tool":
             tool = os.path.normpath(os.path.join(pkg, st["tool"]))
             if not tool.startswith(pkg + os.sep) or not os.path.isfile(tool):
                 raise Fail("%s: setup tool %s is not in the package" % (man["id"], st["tool"]))
+
+            # (this fork) a rerun on ready data: when every declared output is already in the data
+            # folder (e.g. carried over from another machine's setup), the tool step needs no game
+            # source and is skipped. gc-minimap's prepare is the one user: its maps-ready.json and
+            # dungeons-ready.bin are exactly what the step would write.
+            outputs = st.get("outputs", [])
+            if outputs and all(os.path.isfile(os.path.join(data, o)) for o in outputs):
+                print("  %s: %s already prepared (%s present), skipping the tool" %
+                      (man["id"], st.get("title", st["tool"]), ", ".join(outputs)), flush=True)
+                continue
+            if not gc_game and any("{game:" in a for a in st.get("arguments", [])):
+                raise Fail("%s needs your GameCube Wind Waker (.iso, .gcm, .rvz or an extracted folder): --gc-game PATH"
+                           % man["id"])
 
             def arg(a):
                 a = a.replace("{data}", data)
@@ -330,7 +345,7 @@ def run_setup(man, pkg, data, gc_game, python):
             rc = subprocess.call(python + ["-s", "-E", tool] + [arg(a) for a in st.get("arguments", [])], cwd=pkg)
             if rc:
                 raise Fail("%s: setup step %s failed (exit code %d)" % (man["id"], st.get("id"), rc))
-            for o in st.get("outputs", []):
+            for o in outputs:
                 if not os.path.isfile(os.path.join(data, o)):
                     raise Fail("%s: setup step %s made no %s" % (man["id"], st.get("id"), o))
         elif kind != "build_guest_mod":
@@ -379,8 +394,18 @@ def build(args):
         if GQR_WRITE.search(source):
             raise Fail("%s writes a GQR (paired-single quantization register): not supported in the Switch build" % mid)
         data = os.path.join(os.path.abspath(args.data), mid)
-        shutil.rmtree(data, ignore_errors=True)
-        os.makedirs(data)
+        # (this fork) only start the data folder from scratch when the setup will actually run its
+        # tools; with prepared data carried over (outputs present), keep it — run_setup skips the
+        # tools and the folder is exactly what the SD card needs
+        prepared = all(os.path.isfile(os.path.join(data, o))
+                       for st in man.get("setup", []) if st.get("type") == "run_tool"
+                       for o in st.get("outputs", []))
+        has_tools = any(st.get("type") == "run_tool" for st in man.get("setup", []))
+        if not (has_tools and prepared):
+            shutil.rmtree(data, ignore_errors=True)
+            os.makedirs(data, exist_ok=True)
+        else:
+            os.makedirs(data, exist_ok=True)
         run_setup(man, pkg, data, args.gc_game, python)
         # (#121) the package's files the console reads (the manifest, its images and their notices) go into the NRO
         # (package_files); the player's switch and options are one file on the SD card, written by the game from these

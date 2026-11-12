@@ -5,6 +5,135 @@ release: [Releases](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases)
 what is on `devel` and not released yet (also in the
 [development build](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp/releases/tag/devel-build)).
 
+## v1.3.0-cn（本 fork · 对齐上游 v1.3.0）
+
+- **同步上游 v1.3.0（`136f8d12`；相对 v1.2.1 新增 65 个提交 / 92 个文件）。** 以 v1.3.0 为 base
+  三方合并 `zh-desktop`（该分支已含 v1.2.2 同步及 13 个后续修复），共同祖先为 v1.2.1。4 个冲突文件
+  （`guest_builtin.h`、`guest_builtin_ui.cpp`、`screen_mode.cpp`、`make_sd.py`）全部采用上游版本：上游已
+  分别实现内置模组开关、`#ifdef __SWITCH__` 守卫、`players_gen.players_env()` 的 hook skip，中文侧的
+  同名改动不再需要。
+- **中文机制不变**：`WWHD_ZH_UI` / `IMGUI_ZH_TR`（`imconfig.h`）、`menu_i18n::tr()` 内的中文回退
+  （`menu_i18n.cpp`）、`ui_text_switch.cpp` 两张表照旧。上游新 UI 的可见文本几乎都走 `tr()`，自动命中
+  中文词表；仅 `guest_builtin_ui.cpp` 两处模组名补上了 `menu_i18n::tr()`。
+- **补齐 7 条上游新增文案**（美术/基于、边缘跳跃与月跳、会员与卡洛维、菜单音效、剧情判定与存档
+  备份、珍珠与升级剑）。`zh_table.inc` 由 1328 → **1335 条**；按上游 `menu_i18n_check.py` 的口径，
+  316 个 `tr()` 标签的中文覆盖率回到 100%。词表按英文键 strcmp 排序，供 `zh_tr.cpp` 二分查找。
+- **版本号 `v1.2.2-cn` → `v1.3.0-cn`**（`zh-linux-appimage.yml` 的 `VERSION`）。
+- **注意**：Switch `wwhd.nro` 一直是人工上传的产物，本仓库没有自动构建 NRO 的 workflow；
+  Linux AppImage 由 `zh-linux-appimage.yml` 构建。
+
+## v1.2.2-cn（本 fork · 对齐上游 v1.2.2）
+
+- **同步上游 v1.2.2（合并上游 5 个提交）。** 全部是渲染与发布前的修复，无新增菜单文案，`zh_table.inc`
+  的菜单覆盖率保持 100%：
+  - **修 RGBA8 纹理经阴影采样器读取的问题（#126）**：RGBA8 纹理被阴影采样器读取时，作为红通道的
+    深度图处理（`dk_surfaces.h` / `formats.cpp` / `surfaces.cpp`）。
+  - **修 PGO 构建的崩溃（#126）**：编译参数去掉 `-freorder-blocks-and-partition`——冷热分区后冷代码
+    里的异常会终止游戏（`SwitchPgo.cmake`）。
+  - **shader 模板更新到 8,965 states**（比 v1.2.1 多 400 个，来自测试主机的录制），版本固定为 v1.2.2。
+- **版本号 `v1.2.1-cn` → `v1.2.2-cn`**（`zh-linux-appimage.yml` 的 `VERSION`）。
+
+## v1.2.1-cn（本 fork · 对齐上游 v1.2.1）
+
+- **同步上游 v1.2.1（`7ae6c2f`，合并提交 `41dc2cd`，上游新增 35 个提交）。** 要点：
+  - **v1.2.0 的性能工作**：每 pane 的快速路径（按键图标、HUD 隐藏、actor 绘制）、Switch 端 30 fps
+    剔除 hook、被提权的线程（`update_ubo`）也纳入采样、PGO 修复（devkitPro 头文件真实路径、Windows
+    下 profile 前缀用原生路径并输出 LF）。
+  - **游戏布局美术支持（HUD source 2）**：上游让 `WWHD_HUD_GAME` 真正可读（从安装的 2D 包读
+    `game_layouts`）。合并取上游实现，替换掉本 fork 此前的「本端口无此服务」提示——依赖游戏布局图的
+    mod（如 hd-minimap）的地图因此有图了。
+  - **安装器 update 模式与一键更新（#110/#113）**：记住上次安装选项，游戏内可检查更新。
+  - guest 线程 `pthread_create` 失败时报错并终止（#115）；FXAA/FSR1 后续修复（#95/#105）；
+    调用计数器（#65）；随机化游戏支持（安装器校验 rpx 哈希）。
+- **冲突取舍**：`setup.py` 的重编译同时保留本 fork 的 `WWHD_RECOMP_MOD_HOOKS_ONLY`（内置 mod 的
+  函数清单）与上游的 `--randomizer/--expected-rpx-sha256`；`install.json` 同时记录 `sdk_release`
+  （本 fork 的构建指纹）与 `randomizer`；`package.py` 工具清单合并双方（`fork_passes` 系 +
+  上游 `rawstore.py`）；`widgets.h` 的帮助提示用上游的自动换行 tooltip，文案仍过 `IMGUI_ZH_TR`。
+- 上游 v1.2.0/v1.2.1 新增的 21 条菜单文案已补进 `zh_table.inc`（1328 条，菜单覆盖率回到 100%）：
+  三颗珍珠、故事物品发放与备份提示、代码 mod 开关时的重编译提示、菜单音效、存档文件、`Link's name` 等。
+- **修 Switch 构建（占位游戏代码缺调用计数表）。** `thread_sampler_switch.cpp` 无条件读
+  `g_recomp_count_*`，而这些符号只有 `recomp.py`（`fork_passes.fork_count_table`）会写；Switch NRO 用的是
+  `stubgen.py` 的占位代码，链接时报 `undefined reference to g_recomp_count_n`。`stubgen.py` 现在写一份
+  n = 0 的空表，与 `recomp.py` 的输出同构。
+- **修桌面构建（重复 hook 符号）。** 上游的 `screen_mode.cpp` 与本 fork 的 `mods/one_screen.cpp` 定义了
+  同样九个 `hook_`/`site_` 入口（单屏 GamePad 模式）：`SwitchPort.cmake` 早就把 `one_screen.cpp` 排除在
+  Switch 构建外，但桌面构建两个都编，链接报 `duplicate symbol: hook_02618094`。桌面端 `gamepad_mode()`
+  恒为 false（这些 hook 会立刻返回），因此把 `screen_mode.cpp` 的 hook 收进 `__SWITCH__`，桌面继续用
+  `one_screen.cpp`；`screen_mode::` 命名空间（`aspect.cpp` 跨平台调用 `hidden_pane`）保持在守卫之外。
+
+## v1.1.0-cn（本 fork · 对齐上游 v1.1.0 发布线）
+
+> 版本命名自本次起与上游对齐：`v<上游版本>-cn`。此前本 fork 用过 `v1.2.0` / `v1.2.1` / `v1.2.2`
+> 三个自成体系的编号，容易被误认为比上游更新；从 `v1.1.0-cn` 起统一跟随上游的 tag，旧的三个
+> 发布页与 tag 已删除。
+
+- **同步上游至 `78fd5af`（89 个提交，含 v1.1.0 标签之后的全部改动）**：设置菜单的西班牙语/葡语/
+  意语/德语/法语（#86）、按区域分发 PGO 配置（#90）、工作线程使用 core 3（#106）、SaltyNX 状态
+  监控、掉帧采样器、后台着色器列表修复（#102）、固定的 Switch 工具链（`tools/toolchain`）等。
+- **中文化与上游新多语言机制共存。** 上游把菜单文案改走 `menu_i18n::tr()`，本 fork 在其内先查中文
+  表（`WWHD_ZH_UI` 下），因此 `Install %s` 这类格式化文案能在填参前翻译；未命中或 `WWHD_UI_EN=1`
+  时退回上游逻辑。`zh_table.inc` 新增 64 条（存档备份、安装进度、mod 移除等），共 **1307 条**。
+- **行尾统一为 LF。** 新增 `.gitattributes`（`* text=auto eol=lf`，`*.bat`/`*.cmd` 保留 CRLF），
+  解决 `CMakeLists.txt` 等文件以 CRLF 存储、每次同步上游都被判为整文件冲突的问题。
+- **保留本 fork 的启动要求。** 游戏必须从 HOME 屏的 forwarder 图标启动（`INSTALL.md` 已按此重写）。
+- **修复 Linux/AppImage 构建：`menu_i18n.cpp` 的中文头文件路径。** 该文件位于 `runtime/src/`，
+  却写成 `#include "../platform/zh_tr.h"`（解析为不存在的 `runtime/platform/zh_tr.h`）。只有带
+  `-I runtime/src/platform` 的目标能编过，Linux 的测试目标（如 `mod_restart_ui_test`）缺少该路径而失败。
+  改为 `#include "platform/zh_tr.h"`，任何只带 `-I runtime/src` 的目标都能解析。
+- **桌面版（AppImage）可以用代码 mod 了。** 新增「mod 编进游戏代码」的桌面路径（`CMakeLists.txt`：
+  存在 `build/guest-mods/registry.c` 时定义 `WWHD_GUEST_BUILTIN` 并把它编进 gamecode；打包带上
+  `sdk/guest-mods`；`setup.py` 用 `hooks.txt` 以 `WWHD_RECOMP_MOD_HOOKS_ONLY` 重新翻译玩家的游戏代码）。
+  gc-minimap 因此在 SteamOS 上可用，地图数据仍由玩家自己的光盘生成、不随包分发。
+- **随包附三个 mod，装上即用。** `extra-mods/`（女性语音、林可儿）与内置的 gc-minimap 由安装器放进
+  玩家 Mods 目录，manifest 里的 `enabled_by_default` 让它们默认开启；Switch 端内容 mod 解压到
+  `sdmc:/switch/wwhd/ModManager/Mods/` 即可（NRO 不写 SD 卡）。`guard.py` 对
+  `sdk/bundled-mods/` 下的游戏文件树放行，其余检查不变。
+- **内置 mod 不再出现在社区 mod 列表。** `packages::scan` 跳过 id 与内置 mod 相同的文件夹（`<配置目录>/mods/<id>`
+  才是内置 mod 读包的位置，`ModManager/Mods/` 里的副本会被当成外部库 mod 构建，本 fork 一律拒绝，看起来
+  像「内置 mod 坏了」）；目录扫描时记一行日志说明，安装同 id 的包也会被直接拒掉。
+- **同一版本号的新构建会被认出是更新。** 之前安装器只比较版本字符串：重新构建的 `v1.1.0-cn`（例如加了
+  内置 mod 的那版）被当作「游戏已安装」，玩家选「play」就跑的还是旧镜像的运行时与游戏代码——内置 mod
+  页面因此是空的，gc-minimap 也报「native guest mods are not supported」。现在 `sdk/manifest.json` 记录
+  构建来源（`release`，CI 为提交哈希），`install.json` 记下它，两者不同就提示 update 而不是直接启动。
+- **内置 mod 增加 The Story Notebook（`story-notebook` 0.6.1）。** 它是故事系统的必备包：内置后
+  `g_story_package` 在桌面端与 Switch 一样成立，笔记本、说书人的信和任务无需运行时加载 ELF 即可工作
+  （本 fork 拒绝外部 guest 模块）。两个 mod 共用 `daPy_Execute`（`0240EBB0`）这一个 hook，`registry.c`
+  列出两条记录（guest 内存 `0x7F000000` / `0x7F050000`，互不重叠）。Switch 端的包在
+  `wwhd-builtin-mods-sd.zip`（`switch/wwhd/mods/{gc-minimap,story-notebook}/`），桌面端安装器自动复制到
+  `~/.config/wwhd/mods/`。
+
+## 已废弃编号：v1.2.0 / v1.2.1 / v1.2.2
+
+> 这三个编号是本 fork 早期自成体系的版本号，对应的 GitHub 发布页与 tag **已于 2026-11-04 删除**，
+> 内容全部包含在 `v1.1.0-cn` 中。此处仅保留技术记录以便追溯。
+
+- **v1.2.0**：`main` 严格跟踪上游 `centollOS/SwitchWakerHD`，`zh-desktop` 转为长期维护分支；补齐
+  `upstream` / `upstream-desktop` remote；README 增加分支结构与同步流程说明。
+- **v1.2.1**：同步上游 15 个提交（视频片段 #38、存档日期 #100/#322、自动存档 #92、overlay 滑块 #101），
+  补 11 条中文；解决 `CMakeLists.txt` 合并冲突。
+- **v1.2.2**（仅修缺陷，未单独发布）：① 上游 #322 后 `fs.cpp` 依赖 `os_time.cpp`，但
+  `mod_content_fs_test` / `language_source_test` 未链入该源文件，完整构建（含 AppImage 打包）链接失败；
+  ② `tools/release/package.py` 的 `TOOL_FILES` 漏了 `fork_passes.py` / `calleeregs.py` / `singleflow.py`，
+  导致 AppImage 安装时「翻译游戏代码」报 `ModuleNotFoundError`。
+
+## v1.1.6（本 fork · 简体中文版）
+
+> 本小节为 SwitchWakerHD 中文分支（`stefaniecheung-cmd/SwitchWakerHD`，`zh-desktop` 分支）的更新摘要。
+> 上游的英文 Changelog 见下文各版本小节。
+
+- **修复：退出游戏时崩溃并弹出「软件已关闭」窗口。** 经多轮崩溃报告定位，根因是退出路径上残留线程、
+  code-memory 卸载竞争以及一个 `PreUnloadDll` 诊断 break 三者叠加，最终在 Sphaira 内嵌 hbl 的卸载/重载阶段
+  触发 `InvalidMemoryState (0xD401)`。现已清理退出流程（冻结线程、归还 4 GiB code-memory 窗口与 reservation、
+  移除诊断 break），并确认：**游戏必须通过 forwarder（HOME 屏图标）启动**，退出时才能干净回到 HOME 菜单。
+  直接从 hbmenu / Sphaira 启动仍会崩溃，这是 Sphaira 内嵌 hbl 的固有行为，无法从游戏侧绕过。
+- **启动方式变更（强制要求）：改用 forwarder 启动。** forwarder 以 application 类型启动游戏，退出时直接
+  `svcExitProcess()` 回 HOME，不重载任何 NRO、不弹窗。请安装 `wwhd_forwarder.nsp` 并从 HOME 屏图标启动；安装
+  步骤见 [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md)。文档（INSTALL.md、README.md）
+  已把 forwarder 从「可选」改为「必需」。
+- **移除 hd-minimap 内置模组。** 该模组缺少地图美术资源（依赖游戏的「布局美术服务」），导致高清小地图无法
+  显示；已从内置模组中移除，仅保留 gc-minimap（GameCube 风格小地图）。
+- **简体中文界面。** Switch 与桌面端的界面文字、设置菜单均已中文化。
+
 ## Next update
 
 - **For testers: scripted Android runs no longer open Settings** (#379). Runs started with `WWHD_NO_HOST_INPUT` (for

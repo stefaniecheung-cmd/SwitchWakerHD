@@ -2,6 +2,7 @@
 // Switch the listener joins them), the log's recent text in memory for "log" streams, the injected
 // controller state for the input poll.
 #include "debug_server.h"
+#include "host.h"  // (this fork v5) pause_register: the orderly shutdown pauses this thread
 
 #include <arpa/inet.h>
 #include <dirent.h>
@@ -107,6 +108,7 @@ void spawn(void (*fn)(void*), void* arg, bool reap = false) {
     pthread_t t;
     auto* s = new Start{fn, arg, reap};
     if (pthread_create(&t, &attr, [](void* p) -> void* {
+            host::pause_register();  // (this fork v5) the orderly shutdown pauses this thread
             Start s = *static_cast<Start*>(p);
             delete static_cast<Start*>(p);
             s.fn(s.arg);

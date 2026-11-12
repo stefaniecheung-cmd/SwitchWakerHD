@@ -148,10 +148,18 @@ target_compile_options(cemu_latte PRIVATE -w -O2)
 # ---- Dear ImGui (MIT, runtime/third_party/imgui, pinned release): the in-game settings overlay
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/runtime/third_party/imgui)
 # ImGuizmo (MIT, runtime/third_party/imguizmo, pinned commit): the world editor's move and turn handles
+# (this fork) zh_tr.cpp is compiled into the library itself: IMGUI_ZH_TR (imconfig.h) makes imgui's
+# objects call wwhd_zh_tr, and every target that links imgui (the setup gui, the editor tests...) gets
+# the definition with it
 add_library(imgui STATIC ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp
-            ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo/ImGuizmo.cpp)
+            ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo/ImGuizmo.cpp
+            ${CMAKE_SOURCE_DIR}/runtime/src/platform/zh_tr.cpp)
 target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${CMAKE_SOURCE_DIR}/runtime/third_party/imguizmo)
+target_include_directories(imgui PRIVATE ${CMAKE_SOURCE_DIR}/runtime/src/platform)
 target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_DEMO_WINDOWS IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+# (this fork) Chinese interface: IMGUI_ZH_TR (third_party/imgui/imconfig.h) sends ImGui's texts and widget
+# labels through runtime/src/platform/zh_tr.cpp on every platform
+target_compile_definitions(imgui PUBLIC WWHD_ZH_UI=1)
 target_compile_options(imgui PRIVATE -w -O2)
 switch_port_libraries()  # (this fork) cmake/SwitchPort.cmake: uam, deko3d and the Switch's library options
 
@@ -219,6 +227,11 @@ if(NOT WWHD_EDITOR_MCP OR ANDROID)
   list(REMOVE_ITEM RUNTIME_SOURCES ${CMAKE_SOURCE_DIR}/runtime/src/editor/mcp.cpp ${CMAKE_SOURCE_DIR}/runtime/src/editor/mcp_server.cpp)
 endif()
 list(APPEND RUNTIME_SOURCES runtime/src/platform/perf_hint.cpp runtime/src/platform/thread_sampler.cpp)  # Android performance hints (no-op elsewhere)
+if(NOT WWHD_SWITCH)
+  # (this fork) the Chinese interface's lookup (runtime/src/platform/zh_tr.cpp, zh_table.inc); the Switch
+  # build adds it in cmake/SwitchPort.cmake
+  list(APPEND RUNTIME_SOURCES runtime/src/platform/zh_tr.cpp)
+endif()
 list(APPEND RUNTIME_SOURCES ${WWHD_BUILD_INFO})
 list(APPEND RUNTIME_SOURCES ${WWHD_NPC_CATALOGUE})
 # the Delivery Bag's extra pages: their layout description (tools/story_mods/make_bag_page_layout.py), compiled in
@@ -288,6 +301,9 @@ if(WWHD_SDL_HOST)
   endif()
 endif()
 set_source_files_properties(${GX2_SOURCES} ${GFX_SOURCES} PROPERTIES COMPILE_OPTIONS "-include;${CEMU_DIR}/cemu_shim.h")
+# (this fork) zh_tr.cpp is self-contained and also compiles inside the imgui library (CMakeLists above),
+# which has no fmt include path: it must not force-include the cemu shim
+set_source_files_properties(runtime/src/platform/zh_tr.cpp PROPERTIES COMPILE_OPTIONS "")
 set_source_files_properties(runtime/src/gfx/vulkan/pipeline_recipe.cpp PROPERTIES COMPILE_OPTIONS "")
 set_source_files_properties(runtime/src/gfx/vulkan/pass_cache.cpp PROPERTIES COMPILE_OPTIONS "")
 set_source_files_properties(runtime/src/gfx/vulkan/pipeline_demand.cpp PROPERTIES COMPILE_OPTIONS "")
@@ -304,6 +320,16 @@ if(ANDROID)
   set_target_properties(wwhd PROPERTIES OUTPUT_NAME main)
 else()
   add_executable(wwhd ${RUNTIME_SOURCES} ${GX2_SOURCES} ${GFX_SOURCES} ${MOD_GFX_SOURCES} ${IMGUI_METAL})
+endif()
+# (this fork) guest mods built into the game code (tools/switch/guest_mods.py; cmake/SwitchPort.cmake does the
+# same for the NRO): with build/guest-mods/registry.c, the mods are compiled into the game code and the runtime
+# looks them up (runtime/src/mods/guest_builtin.cpp, WWHD_GUEST_BUILTIN). The installer compiles the same files
+# into the player's game code (tools/installer/setup.py), so a release ships sdk/guest-mods.
+if(NOT WWHD_SWITCH AND EXISTS "${CMAKE_SOURCE_DIR}/build/guest-mods/registry.c")
+  file(GLOB _guest_mod_sources CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/build/guest-mods/mod_*.c)
+  target_sources(gamecode PRIVATE ${CMAKE_SOURCE_DIR}/build/guest-mods/registry.c ${_guest_mod_sources})
+  target_compile_definitions(wwhd PRIVATE WWHD_GUEST_BUILTIN=1)
+  message(STATUS "guest mods built into the game code: ${_guest_mod_sources}")
 endif()
 # Testing (desktop): sanitizers for the runtime, GX2 and renderer code and Cemu's decompiler, e.g.
 # -DWWHD_SANITIZE=address. The generated game code is left out (too large; it only touches guest memory).

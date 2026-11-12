@@ -32,7 +32,7 @@ inline void note(const char* s, float min_width, const ImVec4& colour, float spa
     next(min_width, spacing);
     ImGui::AlignTextToFramePadding();
     ImGui::PushStyleColor(ImGuiCol_Text, colour);
-    ImGui::TextWrapped("%s", s);
+    ImGui::TextWrapped("%s", IMGUI_ZH_TR(s));  // (this fork) through "%s": translate here
     ImGui::PopStyleColor();
 }
 }  // namespace overlay::flow

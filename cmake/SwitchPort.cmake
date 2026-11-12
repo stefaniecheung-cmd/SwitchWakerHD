@@ -54,6 +54,9 @@ macro(switch_port_libraries)
   if(WWHD_SWITCH)
     # no processes to open links with on the console (ImGui's default uses execvp/waitpid)
     target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS)
+    # (this fork) Chinese interface: IMGUI_ZH_TR (third_party/imgui/imconfig.h) sends ImGui's texts and widget
+    # labels through runtime/src/platform/zh_tr.cpp
+    target_compile_definitions(imgui PUBLIC WWHD_ZH_UI=1)
   endif()
 
   # ---- uam (devkitPro's deko3d shader compiler, MIT, runtime/third_party/uam, 1.1.0 + PATCHES.md): the
@@ -89,12 +92,16 @@ macro(switch_port_sources)
                             runtime/src/platform/prepare_graphics_ui_switch.cpp runtime/src/platform/ui_text_switch.cpp runtime/src/platform/shader_scan_switch.cpp runtime/src/platform/shader_list_switch.cpp
                             runtime/src/platform/background_shaders_switch.cpp runtime/src/platform/main_switch.cpp runtime/src/platform/core_switch.cpp runtime/src/platform/audio_out_switch.cpp runtime/src/platform/overlay_switch.cpp
                             runtime/src/platform/upstream_stubs_switch.cpp runtime/src/platform/bench_switch.cpp
-                            runtime/src/platform/update_notice_switch.cpp)
+                            runtime/src/platform/update_notice_switch.cpp runtime/src/platform/zh_tr.cpp)
   endif()
 endmacro()
 
 # after the wwhd executable's renderer setup: the guest base register, deko3d, its shaders and the NRO
 macro(switch_port_executable)
+  if(WWHD_SWITCH)
+    # (this fork) the Chinese interface's table and lookup (runtime/src/platform/zh_tr.h)
+    target_compile_definitions(wwhd PRIVATE WWHD_ZH_UI=1)
+  endif()
   # Switch: the guest memory base stays in the reserved register x28 (runtime/include/ppc.h, core.cpp
   # guest_call). On by default since v0.4.4 (main thread ~2% faster in the performance test's busy scenes).
   option(WWHD_SWITCH_BASE_REG "Switch: keep the guest memory base in x28" ON)

@@ -1,5 +1,6 @@
 // Cemuhook (DSU) motion client (see dsu.h). Protocol: https://v1993.github.io/cemuhook-protocol/
 #include "dsu.h"
+#include "../platform/host.h"  // (this fork v3) pause_register
 
 #include <algorithm>
 #include <chrono>
@@ -149,7 +150,10 @@ void Client::start(const std::string& host, uint16_t port, uint8_t slot) {
         std::lock_guard lk(mu_);
         status_ = "connecting to " + host + ":" + std::to_string(port);
     }
-    thread_ = std::thread(&Client::run, this, host, port, slot);
+    thread_ = std::thread([this, host, port, slot] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
+        run(host, port, slot);
+    });
 }
 
 void Client::stop() {

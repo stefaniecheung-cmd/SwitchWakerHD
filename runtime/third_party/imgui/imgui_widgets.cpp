@@ -284,6 +284,7 @@ void ImGui::Text(const char* fmt, ...)
 
 void ImGui::TextV(const char* fmt, va_list args)
 {
+    fmt = IMGUI_ZH_TR(fmt);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return;
@@ -303,6 +304,7 @@ void ImGui::TextColored(const ImVec4& col, const char* fmt, ...)
 
 void ImGui::TextColoredV(const ImVec4& col, const char* fmt, va_list args)
 {
+    fmt = IMGUI_ZH_TR(fmt);  // WWHD: Chinese UI
     PushStyleColor(ImGuiCol_Text, col);
     TextV(fmt, args);
     PopStyleColor();
@@ -310,6 +312,7 @@ void ImGui::TextColoredV(const ImVec4& col, const char* fmt, va_list args)
 
 void ImGui::TextDisabled(const char* fmt, ...)
 {
+    fmt = IMGUI_ZH_TR(fmt);  // WWHD: Chinese UI
     va_list args;
     va_start(args, fmt);
     TextDisabledV(fmt, args);
@@ -394,6 +397,7 @@ void ImGui::LabelText(const char* label, const char* fmt, ...)
 // Add a label+text combo aligned to other label+value widgets
 void ImGui::LabelTextV(const char* label, const char* fmt, va_list args)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return;
@@ -432,6 +436,7 @@ void ImGui::BulletText(const char* fmt, ...)
 // Text with a little bullet aligned to the typical tree node.
 void ImGui::BulletTextV(const char* fmt, va_list args)
 {
+    fmt = IMGUI_ZH_TR(fmt);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return;
@@ -786,6 +791,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
 
 bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -834,6 +840,7 @@ bool ImGui::Button(const char* label, const ImVec2& size_arg)
 // Small buttons fits within text without additional vertical spacing.
 bool ImGui::SmallButton(const char* label)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiContext& g = *GImGui;
     float backup_padding_y = g.Style.FramePadding.y;
     g.Style.FramePadding.y = 0.0f;
@@ -1250,6 +1257,7 @@ bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const I
 
 bool ImGui::Checkbox(const char* label, bool* v)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -1374,6 +1382,7 @@ bool ImGui::CheckboxFlags(const char* label, ImU64* flags, ImU64 flags_value)
 
 bool ImGui::RadioButton(const char* label, bool active)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -1430,6 +1439,7 @@ bool ImGui::RadioButton(const char* label, bool active)
 // FIXME: This would work nicely if it was a public template, e.g. 'template<T> RadioButton(const char* label, T* v, T v_button)', but I'm not sure how we would expose it..
 bool ImGui::RadioButton(const char* label, int* v, int v_button)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     const bool pressed = RadioButton(label, *v == v_button);
     if (pressed)
         *v = v_button;
@@ -1796,6 +1806,7 @@ void ImGui::SeparatorTextEx(ImGuiID id, const char* label, const char* label_end
 
 void ImGui::SeparatorText(const char* label)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return;
@@ -1946,6 +1957,7 @@ static float CalcMaxPopupHeightFromItemCount(int items_count)
 
 bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
 
@@ -3453,6 +3465,7 @@ bool ImGui::SliderScalarN(const char* label, ImGuiDataType data_type, void* v, i
 
 bool ImGui::SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     return SliderScalar(label, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
 }
 
@@ -3484,6 +3497,7 @@ bool ImGui::SliderAngle(const char* label, float* v_rad, float v_degrees_min, fl
 
 bool ImGui::SliderInt(const char* label, int* v, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     return SliderScalar(label, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
 
@@ -4027,6 +4041,7 @@ bool ImGui::InputTextMultiline(const char* label, char* buf, size_t buf_size, co
 
 bool ImGui::InputTextWithHint(const char* label, const char* hint, char* buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     IM_ASSERT(!(flags & ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
     return InputTextEx(label, hint, buf, (int)buf_size, ImVec2(0, 0), flags, callback, user_data);
 }
@@ -7348,6 +7363,7 @@ void ImGui::SetNextItemStorageID(ImGuiID storage_id)
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
 bool ImGui::CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -7361,6 +7377,7 @@ bool ImGui::CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags)
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
 bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -7404,6 +7421,7 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 // FIXME: Selectable() with (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
 bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -7596,6 +7614,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
 
 bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     if (Selectable(label, *p_selected, flags, size_arg))
     {
         *p_selected = !*p_selected;
@@ -9745,11 +9764,13 @@ bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut
 
 bool ImGui::MenuItem(const char* label, const char* shortcut, bool selected, bool enabled)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     return MenuItemEx(label, NULL, shortcut, selected, enabled);
 }
 
 bool ImGui::MenuItem(const char* label, const char* shortcut, bool* p_selected, bool enabled)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     if (MenuItemEx(label, NULL, shortcut, p_selected ? *p_selected : false, enabled))
     {
         if (p_selected)
@@ -10633,6 +10654,7 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 
 bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags)
 {
+    label = IMGUI_ZH_TR(label);  // WWHD: Chinese UI
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     if (window->SkipItems)

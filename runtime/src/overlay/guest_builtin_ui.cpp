@@ -151,7 +151,7 @@ void draw() {
         bool on = m.enabled;
         if (ImGui::Checkbox("##on", &on)) { g_switch_error.clear(); guestbuiltin::set_enabled(m, on, g_switch_error); }
         ImGui::TableNextColumn();
-        ImGui::TextUnformatted((m.name + "  \xE2\x80\xBA").c_str());
+        ImGui::TextUnformatted((std::string(menu_i18n::tr(m.name.c_str())) + "  \xE2\x80\xBA").c_str());
         status_line(m);
         ImGui::PopID();
     }
@@ -175,7 +175,7 @@ bool page(bool back, bool& back_used) {
     ImGui::Separator();
     guestbuiltin::Mod& m = *it;
     const Layout* l = layout_of(m.id);
-    ImGui::TextUnformatted(m.name.c_str());
+    ImGui::TextUnformatted(menu_i18n::tr(m.name.c_str()));
     ImGui::SameLine();
     ImGui::TextDisabled("%s", m.version.c_str());
     // (#121) the switch, as a built-in mod's page has it

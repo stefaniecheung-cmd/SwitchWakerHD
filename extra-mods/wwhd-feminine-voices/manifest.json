@@ -1,0 +1,13 @@
+{
+ "format_version": 1,
+ "id": "wwhd-feminine-voices",
+ "name": "Feminine voices",
+ "version": "1.0.0",
+ "author": "BigSharkZ, Niribelle, MobiusWing1",
+ "description": "Voice actress lines for Link in the USA voice banks (Cafe/US AudioRes). Replaces the game's voice_0.aw and JaiInit.aaf.",
+ "game_id": "wwhd",
+ "kind": "content",
+ "minimum_manager_version": "1.5.0",
+ "content_dir": "content",
+ "enabled_by_default": true
+}

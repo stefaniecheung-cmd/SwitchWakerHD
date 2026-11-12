@@ -1,0 +1,1890 @@
+[
+ {
+  "id": 0,
+  "file": "overlay.cpp",
+  "line": 525,
+  "text": "Save states",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 1,
+  "file": "overlay.cpp",
+  "line": 529,
+  "text": "Full save states: the whole running game (large, contain game data: never share them).%s",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 2,
+  "file": "overlay.cpp",
+  "line": 531,
+  "text": "A save state keeps your progress and where Link stands (a few KB, no game data). Loading enters that place with that progress; enemies and cutscenes start fresh.%s",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 3,
+  "file": "overlay.cpp",
+  "line": 543,
+  "text": "Slot %d",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 4,
+  "file": "overlay.cpp",
+  "line": 545,
+  "text": "empty",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 5,
+  "file": "overlay.cpp",
+  "line": 554,
+  "text": "also holds an older full state (slot%d.bin, %.0f MB)",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 6,
+  "file": "overlay.cpp",
+  "line": 556,
+  "text": "Kept on disk, not loaded: the newer portable state is. It contains game data: don't share it. Delete it in the states folder if you no longer need it.",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 7,
+  "file": "overlay.cpp",
+  "line": 559,
+  "text": "also holds an older portable state (slot%d.wwstate)",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 8,
+  "file": "overlay.cpp",
+  "line": 563,
+  "text": "Save",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 9,
+  "file": "overlay.cpp",
+  "line": 569,
+  "text": "Load",
+  "count": 3,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 10,
+  "file": "overlay.cpp",
+  "line": 583,
+  "text": "Copy save for bug report",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 11,
+  "file": "overlay.cpp",
+  "line": 590,
+  "text": "Copied",
+  "count": 2,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 12,
+  "file": "overlay.cpp",
+  "line": 592,
+  "text": "Copies the paths of your newest save state and of your save file (cking.sav): attach both files to the bug report. Save a state at the place of the problem first.",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 13,
+  "file": "overlay.cpp",
+  "line": 602,
+  "text": "For a bug report, attach your newest save state and your save file (cking.sav). Save a state at the place of the problem first.",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 14,
+  "file": "overlay.cpp",
+  "line": 606,
+  "text": "States folder: %s",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 15,
+  "file": "overlay.cpp",
+  "line": 615,
+  "text": "Full-state save path",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 16,
+  "file": "overlay.cpp",
+  "line": 617,
+  "text": "Auto uses less-memory streaming on Android and fast background compression on desktop. Applies to manual full states and Crash Recovery; loading works with either path.",
+  "count": 1,
+  "fn": "tab_saves"
+ },
+ {
+  "id": 17,
+  "file": "overlay.cpp",
+  "line": 626,
+  "text": "Screenshots",
+  "count": 1,
+  "fn": "tab_saves_screenshots"
+ },
+ {
+  "id": 18,
+  "file": "overlay.cpp",
+  "line": 635,
+  "text": "Screenshot is not bound: set a key in the Shortcuts tab.",
+  "count": 1,
+  "fn": "tab_saves_screenshots"
+ },
+ {
+  "id": 19,
+  "file": "overlay.cpp",
+  "line": 636,
+  "text": "%s in game saves the TV picture as a PNG at the internal resolution, without this menu (change the key in Controls).",
+  "count": 1,
+  "fn": "tab_saves_screenshots"
+ },
+ {
+  "id": 20,
+  "file": "overlay.cpp",
+  "line": 641,
+  "text": "A second file, ..._GamePad.png, while the GamePad picture is on screen (its window or the overlay in the TV picture).",
+  "count": 1,
+  "fn": "tab_saves_screenshots"
+ },
+ {
+  "id": 21,
+  "file": "overlay.cpp",
+  "line": 643,
+  "text": "Open screenshots folder",
+  "count": 1,
+  "fn": "tab_saves_screenshots"
+ },
+ {
+  "id": 22,
+  "file": "overlay.cpp",
+  "line": 656,
+  "text": "Last session and auto saves",
+  "count": 1,
+  "fn": "tab_saves_convenience"
+ },
+ {
+  "id": 23,
+  "file": "overlay.cpp",
+  "line": 667,
+  "text": "%s:  %s%s%s",
+  "count": 1,
+  "fn": "tab_saves_convenience"
+ },
+ {
+  "id": 24,
+  "file": "overlay.cpp",
+  "line": 668,
+  "text": "%s:  %s",
+  "count": 1,
+  "fn": "tab_saves_convenience"
+ },
+ {
+  "id": 25,
+  "file": "overlay.cpp",
+  "line": 672,
+  "text": "Taken when you quit the game (on Android also when the app goes to the background), unless a cutscene or dialogue is running then. A small portable state: your progress and where Link stands.",
+  "count": 1,
+  "fn": "tab_saves_convenience"
+ },
+ {
+  "id": 26,
+  "file": "overlay.cpp",
+  "line": 689,
+  "text": "Saves a small portable state in the background into Auto save 1 to 3, the oldest first. If the game is in a cutscene or dialogue, it tries again a little later. Separate from Crash Recovery.",
+  "count": 1,
+  "fn": "tab_saves_convenience"
+ },
+ {
+  "id": 27,
+  "file": "overlay.cpp",
+  "line": 695,
+  "text": "Loads that state when the game starts, as soon as you continue a Quest Log on the title screen. An empty slot starts the game as usual.",
+  "count": 1,
+  "fn": "tab_saves_convenience"
+ },
+ {
+  "id": 28,
+  "file": "overlay.cpp",
+  "line": 700,
+  "text": "Crash Recovery",
+  "count": 1,
+  "fn": "tab_saves_crash_recovery"
+ },
+ {
+  "id": 29,
+  "file": "overlay.cpp",
+  "line": 703,
+  "text": "Saves the game into automatic states in the background and records the controller input since the latest one. After a crash, the crash log says how to load it. Saving freezes the game for a moment.",
+  "count": 1,
+  "fn": "tab_saves_crash_recovery"
+ },
+ {
+  "id": 30,
+  "file": "overlay.cpp",
+  "line": 716,
+  "text": "Automatic state %d:  %s%s%s",
+  "count": 1,
+  "fn": "tab_saves_crash_recovery"
+ },
+ {
+  "id": 31,
+  "file": "overlay.cpp",
+  "line": 717,
+  "text": "Automatic state %d:  empty",
+  "count": 1,
+  "fn": "tab_saves_crash_recovery"
+ },
+ {
+  "id": 32,
+  "file": "overlay.cpp",
+  "line": 775,
+  "text": "Shader cache",
+  "count": 1,
+  "fn": "shader_cache_section"
+ },
+ {
+  "id": 33,
+  "file": "overlay.cpp",
+  "line": 777,
+  "text": "Rebuild shader cache",
+  "count": 1,
+  "fn": "shader_cache_section"
+ },
+ {
+  "id": 34,
+  "file": "overlay.cpp",
+  "line": 779,
+  "text": "Could not save the request. Check that the settings folder is writable.",
+  "count": 1,
+  "fn": "shader_cache_section"
+ },
+ {
+  "id": 35,
+  "file": "overlay.cpp",
+  "line": 786,
+  "text": "Export shader template",
+  "count": 1,
+  "fn": "shader_cache_section"
+ },
+ {
+  "id": 36,
+  "file": "overlay.cpp",
+  "line": 789,
+  "text": "Saves my-template.bin in the screenshots folder: the shader states and pipelines this computer\nrecorded, as hashes and settings only (no shader code, no game data). Attach it to issue #177\nso the next release prepares them for everyone.",
+  "count": 1,
+  "fn": "shader_cache_section"
+ },
+ {
+  "id": 37,
+  "file": "overlay.cpp",
+  "line": 799,
+  "text": "GPU driver (Snapdragon / Adreno)",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 38,
+  "file": "overlay.cpp",
+  "line": 800,
+  "text": "Active: %s",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 39,
+  "file": "overlay.cpp",
+  "line": 802,
+  "text": "Install driver ZIP...",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 40,
+  "file": "overlay.cpp",
+  "line": 811,
+  "text": "Remove",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 41,
+  "file": "overlay.cpp",
+  "line": 815,
+  "text": "Driver changes take effect on restart. An unfinished first 120-frame probe selects the system driver on the next start.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 42,
+  "file": "overlay.cpp",
+  "line": 818,
+  "text": "Renderer (takes effect after a restart)",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 43,
+  "file": "overlay.cpp",
+  "line": 827,
+  "text": "This start: %s",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 44,
+  "file": "overlay.cpp",
+  "line": 829,
+  "text": "The game uses %s after a restart. Progress since your last save is lost.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 45,
+  "file": "overlay.cpp",
+  "line": 830,
+  "text": "Restart now",
+  "count": 2,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 46,
+  "file": "overlay.cpp",
+  "line": 833,
+  "text": "Frame rate",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 47,
+  "file": "overlay.cpp",
+  "line": 842,
+  "text": "40, 60, 120 and 240 fps: frame interpolation. The game logic keeps its 30 steps a second, and the\nframes in between are drawn blended (1 in-between frame per step at 60 fps, 3 at 120 fps,\n7 at 240 fps). The display shows at most its refresh rate: higher choices draw that many.\n40 fps draws 4 frames for every 3 steps (1 in-between frame per 3 steps), for 40, 80 and\n120 Hz screens (a Steam Deck set to 40 Hz or 80 Hz, phones with a 120 Hz panel).",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 48,
+  "file": "overlay.cpp",
+  "line": 848,
+  "text": "True 60 runs the game logic at 60 steps per second",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 49,
+  "file": "overlay.cpp",
+  "line": 853,
+  "text": "Your display: %d Hz. 40 fps needs a 40, 80 or 120 Hz screen: here each frame stays on\nscreen for 1 or 2 refreshes in turn (uneven motion). Choose 30 or 60 fps, or set the\nscreen to 40, 80 or 120 Hz.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 50,
+  "file": "overlay.cpp",
+  "line": 857,
+  "text": "Your display: %d Hz. %d fps needs a %d Hz display; %d fps are drawn (the display cannot show more).",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 51,
+  "file": "overlay.cpp",
+  "line": 859,
+  "text": "Your display: %d Hz. Frames beyond %d a second are drawn but not shown (presentation without vsync).",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 52,
+  "file": "overlay.cpp",
+  "line": 861,
+  "text": "Your display: %d Hz",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 53,
+  "file": "overlay.cpp",
+  "line": 863,
+  "text": "Display refresh rate unknown: %d fps are drawn; frames beyond the display's rate are not shown.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 54,
+  "file": "overlay.cpp",
+  "line": 869,
+  "text": "When the computer cannot draw all frames, skip in-between frames instead of slowing the\nwhole game down. The performance overlay shows how many are drawn.\nOff: every logic step waits for all of its frames, so if the frame target is not reached\n(e.g. 120/240 fps at a high internal resolution) the whole game runs in slow motion.\nSaved separately for 40/60 fps (off by default; on by default on Android and Windows on ARM)\nand 120/240 fps (on by default).",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 55,
+  "file": "overlay.cpp",
+  "line": 876,
+  "text": "Off: if this computer cannot reach %d fps, the whole game slows down (the performance\noverlay then shows fewer than 30 logic steps/s). Turn it on to keep the game's speed.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 56,
+  "file": "overlay.cpp",
+  "line": 892,
+  "text": "When the device gets hot, 60 fps pauses until it cools down. Relaxed and Off keep 60 fps\nlonger, but the device may slow down or get warm. Normal suits this device; Relaxed waits\nlonger on any device; Off never pauses 60 fps for heat.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 57,
+  "file": "overlay.cpp",
+  "line": 900,
+  "text": "Debug only, to see how many frames a second this computer can draw: no frame limit and no\nvsync. The game counts frames, so it runs faster than normal. The frame rate is in the window\ntitle and the performance overlay. Not saved. (With frame interpolation and Keep game speed\non, the game logic still keeps 30 steps a second.)",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 58,
+  "file": "overlay.cpp",
+  "line": 905,
+  "text": "Internal resolution",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 59,
+  "file": "overlay.cpp",
+  "line": 915,
+  "text": "Dynamic resolution",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 60,
+  "file": "overlay.cpp",
+  "line": 926,
+  "text": "Lowers the internal resolution while the graphics chip cannot keep up with the frame rate, down to\nthe chosen share of it, and raises it again when there is room. The picture is softer while it is\nlower. Helps where the graphics chip is the limit (phones, older computers at a high resolution);\nwhen the processor is the limit, the resolution stays.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 61,
+  "file": "overlay.cpp",
+  "line": 934,
+  "text": "Gameplay FOV",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 62,
+  "file": "overlay.cpp",
+  "line": 936,
+  "text": "100% keeps the original field of view. Higher values show more of the world and make Link\nappear smaller. Applies to gameplay and combat in 2D and 3D. Cutscenes, dialogue,\nscene transitions and menus keep their authored FOV. First-person view, item aiming and\nthe Telescope are widened by the same factor, so their zoom is weaker above 100%.\nMaximum vertical FOV: 110 degrees. Wider settings also widen visibility/culling checks.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 63,
+  "file": "overlay.cpp",
+  "line": 942,
+  "text": "Aspect ratio",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 64,
+  "file": "overlay.cpp",
+  "line": 952,
+  "text": "Stereoscopic 3D (experimental)",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 65,
+  "file": "overlay.cpp",
+  "line": 955,
+  "text": "3D output",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 66,
+  "file": "overlay.cpp",
+  "line": 958,
+  "text": "3D depth",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 67,
+  "file": "overlay.cpp",
+  "line": 960,
+  "text": "Convergence",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 68,
+  "file": "overlay.cpp",
+  "line": 963,
+  "text": "Swap eyes",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 69,
+  "file": "overlay.cpp",
+  "line": 965,
+  "text": "Separate geometry rendering for each eye. Half SBS and TAB are anamorphic; Full SBS preserves each eye's pixels. Experimental: scene and effect validation is in progress.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 70,
+  "file": "overlay.cpp",
+  "line": 970,
+  "text": "HDR output",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 71,
+  "file": "overlay.cpp",
+  "line": 975,
+  "text": "HDR is unavailable on this display. Using SDR output.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 72,
+  "file": "overlay.cpp",
+  "line": 976,
+  "text": "Enable HDR in Windows for the display containing this window.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 73,
+  "file": "overlay.cpp",
+  "line": 977,
+  "text": "This Vulkan surface does not support scRGB HDR output.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 74,
+  "file": "overlay.cpp",
+  "line": 992,
+  "text": "HDR output expands the game's SDR picture; it cannot recover already clipped lighting. Paper white also affects the in-game HUD. Settings-menu brightness is independent. Set peak brightness to your display's capability. SDR screenshots remain SDR.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 75,
+  "file": "overlay.cpp",
+  "line": 995,
+  "text": "Effects",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 76,
+  "file": "overlay.cpp",
+  "line": 999,
+  "text": "Bloom strength",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 77,
+  "file": "overlay.cpp",
+  "line": 1002,
+  "text": "Off##bloom",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 78,
+  "file": "overlay.cpp",
+  "line": 1004,
+  "text": "Default##bloom",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 79,
+  "file": "overlay.cpp",
+  "line": 1005,
+  "text": "Glow around bright areas. 100% matches the original game; 0% turns bloom off. Applies immediately.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 80,
+  "file": "overlay.cpp",
+  "line": 1008,
+  "text": "Horizon haze",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 81,
+  "file": "overlay.cpp",
+  "line": 1011,
+  "text": "Default##haze",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 82,
+  "file": "overlay.cpp",
+  "line": 1012,
+  "text": "The pale band low in the sky. 100% matches the original game; lower values give a clearer, deeper blue sky near the horizon. Together with less bloom it gives a more vivid sky. Applies immediately.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 83,
+  "file": "overlay.cpp",
+  "line": 1019,
+  "text": "Original keeps the game's painted clouds. Toon clouds draws them as puffy cel-shaded clouds with sunlit tops, shaded undersides and banks along the horizon, from the same clouds the game places, so weather and time of day still drive them. Lite is lighter on the GPU (phones, handhelds); High adds self-shadowing.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 84,
+  "file": "overlay.cpp",
+  "line": 1023,
+  "text": "Soft shadows of the drifting sky clouds on the sea, islands and characters. Weaker at dusk, off at night. Off matches the original game.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 85,
+  "file": "overlay.cpp",
+  "line": 1041,
+  "text": "GPU (Vulkan)",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 86,
+  "file": "overlay.cpp",
+  "line": 1056,
+  "text": "GPU changes apply after a restart. Currently using %s.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 87,
+  "file": "overlay.cpp",
+  "line": 1058,
+  "text": "Restart now##gpu",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 88,
+  "file": "overlay.cpp",
+  "line": 1060,
+  "text": "WWHD_VK_DEVICE=%s takes precedence for this start.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 89,
+  "file": "overlay.cpp",
+  "line": 1064,
+  "text": "Presentation (Vulkan)",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 90,
+  "file": "overlay.cpp",
+  "line": 1078,
+  "text": "not offered by this driver",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 91,
+  "file": "overlay.cpp",
+  "line": 1081,
+  "text": "Used by the Vulkan renderer only (Metal always presents with vsync).",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 92,
+  "file": "overlay.cpp",
+  "line": 1082,
+  "text": "WWHD_VK_PRESENT_MODE=%s is set for this start and takes precedence.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 93,
+  "file": "overlay.cpp",
+  "line": 1087,
+  "text": "Not offered by this driver: %s.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 94,
+  "file": "overlay.cpp",
+  "line": 1094,
+  "text": "This build has no Vulkan renderer.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 95,
+  "file": "overlay.cpp",
+  "line": 1096,
+  "text": "Overlay",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 96,
+  "file": "overlay.cpp",
+  "line": 1098,
+  "text": "Reset performance averages",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 97,
+  "file": "overlay.cpp",
+  "line": 1102,
+  "text": "Copy performance report",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 98,
+  "file": "overlay.cpp",
+  "line": 1111,
+  "text": "Where the renderer spends its time over the last few seconds, as text for a bug report",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 99,
+  "file": "overlay.cpp",
+  "line": 1114,
+  "text": "Advanced",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 100,
+  "file": "overlay.cpp",
+  "line": 1122,
+  "text": "Applies after restarting the game. Hands the graphics work to a second CPU thread. This can raise the frame rate on devices whose CPU holds it back (phones, handhelds). On other computers it can make frame times less even (more short hitches). Uses a little more CPU and battery. Off by default.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 101,
+  "file": "overlay.cpp",
+  "line": 1130,
+  "text": "Applies after restarting the game. Splits RGB vertex inputs for driver troubleshooting.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 102,
+  "file": "overlay.cpp",
+  "line": 1152,
+  "text": "Convert vertices on the CPU",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 103,
+  "file": "overlay.cpp",
+  "line": 1157,
+  "text": "Applies after restarting. Automatic converts only what PowerVR GPUs decode wrongly (32-bit byte-swapped data). On converts every attribute; Off disables it.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 104,
+  "file": "overlay.cpp",
+  "line": 1158,
+  "text": "Vertex conversion diagnostics",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 105,
+  "file": "overlay.cpp",
+  "line": 1164,
+  "text": "CPU conversion class",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 106,
+  "file": "overlay.cpp",
+  "line": 1171,
+  "text": "For driver testing. Use Automatic above, select one class, then restart. The log records the active classes.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 107,
+  "file": "overlay.cpp",
+  "line": 1183,
+  "text": "Bug reports",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 108,
+  "file": "overlay.cpp",
+  "line": 1185,
+  "text": "Share log",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 109,
+  "file": "overlay.cpp",
+  "line": 1210,
+  "text": "Logging is on by default. Share the current and previous run after reproducing a bug. User paths are removed; each log stops at 64 MiB. Changes apply on the next start.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 110,
+  "file": "overlay.cpp",
+  "line": 1213,
+  "text": "From the next start: captures/wwhd.log in the game's data folder (the previous run's is kept as wwhd-previous.log), with your user paths removed. Turn it on before reproducing a bug and attach the file to the bug report.",
+  "count": 1,
+  "fn": "tab_graphics"
+ },
+ {
+  "id": 111,
+  "file": "overlay.cpp",
+  "line": 1310,
+  "text": "Drag to place the picture anywhere. Click or tap a circle to snap it to that spot. Focus the diagram and use the D-pad to move.",
+  "count": 1,
+  "fn": "pip_diagram"
+ },
+ {
+  "id": 112,
+  "file": "overlay.cpp",
+  "line": 1352,
+  "text": "GamePad screen",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 113,
+  "file": "overlay.cpp",
+  "line": 1362,
+  "text": "View",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 114,
+  "file": "overlay.cpp",
+  "line": 1370,
+  "text": "Gaming Mode shows one window at a time. A separate GamePad window may make the game picture blurry.",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 115,
+  "file": "overlay.cpp",
+  "line": 1372,
+  "text": "Shows GamePad menus and the Wind Waker song list while open and follows Off-TV Play.",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 116,
+  "file": "overlay.cpp",
+  "line": 1374,
+  "text": "Only the GamePad picture. In the game, Minus switches to Off-TV Play (the game on the GamePad).",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 117,
+  "file": "overlay.cpp",
+  "line": 1386,
+  "text": "Picture-in-picture placement",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 118,
+  "file": "overlay.cpp",
+  "line": 1391,
+  "text": "Position",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 119,
+  "file": "overlay.cpp",
+  "line": 1401,
+  "text": "The game picture previews changes while this section is open.",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 120,
+  "file": "overlay.cpp",
+  "line": 1404,
+  "text": "Window",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 121,
+  "file": "overlay.cpp",
+  "line": 1412,
+  "text": "Interface",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 122,
+  "file": "overlay.cpp",
+  "line": 1419,
+  "text": "Automatic sizes Settings for your screen: more compact on a phone, larger on a tablet or handheld, with every button at least 7 mm tall. Small, Medium and Large set the size yourself.",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 123,
+  "file": "overlay.cpp",
+  "line": 1421,
+  "text": "Touch controls",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 124,
+  "file": "overlay.cpp",
+  "line": 1428,
+  "text": "Automatic hides the floating buttons while a controller is connected. Tap near the top-left corner to reveal them for five seconds.",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 125,
+  "file": "overlay.cpp",
+  "line": 1436,
+  "text": "Picture scaling",
+  "count": 1,
+  "fn": "tab_display"
+ },
+ {
+  "id": 126,
+  "file": "overlay.cpp",
+  "line": 1476,
+  "text": "Game code is ready. Restart the game to apply the change.",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 127,
+  "file": "overlay.cpp",
+  "line": 1480,
+  "text": "Later",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 128,
+  "file": "overlay.cpp",
+  "line": 1485,
+  "text": "The setup builds it in the background; you can keep playing. Its notification and screen can pause it.",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 129,
+  "file": "overlay.cpp",
+  "line": 1486,
+  "text": "Hide",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 130,
+  "file": "overlay.cpp",
+  "line": 1488,
+  "text": "Cancel rebuild",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 131,
+  "file": "overlay.cpp",
+  "line": 1491,
+  "text": "This mod needs code-mod support. Enable it now?",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 132,
+  "file": "overlay.cpp",
+  "line": 1492,
+  "text": "Code mods need the game code to be rebuilt %s mod support, %s. Rebuild now?",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 133,
+  "file": "overlay.cpp",
+  "line": 1494,
+  "text": "Rebuild now",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 134,
+  "file": "overlay.cpp",
+  "line": 1496,
+  "text": "Cancel",
+  "count": 1,
+  "fn": "code_mod_dialog"
+ },
+ {
+  "id": 135,
+  "file": "overlay.cpp",
+  "line": 1551,
+  "text": "Camera speed",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 136,
+  "file": "overlay.cpp",
+  "line": 1555,
+  "text": "Enemy lock-on range",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 137,
+  "file": "overlay.cpp",
+  "line": 1558,
+  "text": "Cycle enemy targets with R3",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 138,
+  "file": "overlay.cpp",
+  "line": 1560,
+  "text": "Range 1 keeps the original enemy targeting distance. Press R3 while locked on to cycle enemy targets. Disabling this mod restores original targeting behavior.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 139,
+  "file": "overlay.cpp",
+  "line": 1564,
+  "text": "%s=%s overrides the saved option at startup.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 140,
+  "file": "overlay.cpp",
+  "line": 1576,
+  "text": "Double jump (once more in the air)",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 141,
+  "file": "overlay.cpp",
+  "line": 1579,
+  "text": "No automatic jumps off ledges",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 142,
+  "file": "overlay.cpp",
+  "line": 1581,
+  "text": "The button also keeps its normal use. Link drops off ledges instead of jumping when automatic ledge jumps are off; press the button just after leaving the edge to jump. The moon jump cheat takes L while it is on.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 143,
+  "file": "overlay.cpp",
+  "line": 1590,
+  "text": "Only accelerates supported upper-body equip and boomerang wind-up for enemy-locked quick use. Does not bypass native readiness or ammo, or change projectile speed or flight/return. Default: vanilla 1x, with quick use off.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 144,
+  "file": "overlay.cpp",
+  "line": 1594,
+  "text": "WWHD_MOD_QUICK_USE_SPEED=%s overrides the saved speed at startup.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 145,
+  "file": "overlay.cpp",
+  "line": 1611,
+  "text": "Mute audio while fast forwarding",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 146,
+  "file": "overlay.cpp",
+  "line": 1613,
+  "text": "Hold during a cutscene or conversation. Prompts still wait for input. Rebind the selected game button in Controls. Unmuted audio plays at a higher pitch.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 147,
+  "file": "overlay.cpp",
+  "line": 1628,
+  "text": "Running",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 148,
+  "file": "overlay.cpp",
+  "line": 1631,
+  "text": "Swimming",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 149,
+  "file": "overlay.cpp",
+  "line": 1634,
+  "text": "Boost time",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 150,
+  "file": "overlay.cpp",
+  "line": 1637,
+  "text": "Cooldown",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 151,
+  "file": "overlay.cpp",
+  "line": 1640,
+  "text": "Show boost bar",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 152,
+  "file": "overlay.cpp",
+  "line": 1655,
+  "text": "WWHD_MOD_MOVE_BUTTON=%s overrides the saved button at startup.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 153,
+  "file": "overlay.cpp",
+  "line": 1656,
+  "text": "A multiplier of 1 leaves that state alone. Boost time is how long a full bar lasts; 0 has no limit, and the bar refills whenever you are not boosting. Cooldown is the bar's refill time (0 for immediate refill). With no limit, or with Show boost bar off, no bar is shown; the boost works the same. The bar also hides while a menu, a cutscene or a conversation is on screen. The dash option replaces the walk clip while boosting; full-speed running already uses dash. Sprint pose adds a forward lean and arm drive while running freely, blended with the boost. Rebind the chosen game button in Controls. Roll, then hold A: roll while running and keep A held as you come out of the roll to boost until you let go. It is always held (Press to toggle does not apply) and works on land only.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 154,
+  "file": "overlay.cpp",
+  "line": 1671,
+  "text": "Speed",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 155,
+  "file": "overlay.cpp",
+  "line": 1675,
+  "text": "Normal sail",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 156,
+  "file": "overlay.cpp",
+  "line": 1678,
+  "text": "Swift Sail",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 157,
+  "file": "overlay.cpp",
+  "line": 1680,
+  "text": "Multiplies the speed the wind gives the boat. The jump (R) keeps its normal height.",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 158,
+  "file": "overlay.cpp",
+  "line": 1683,
+  "text": "Sensitivity",
+  "count": 1,
+  "fn": "builtin_options"
+ },
+ {
+  "id": 159,
+  "file": "overlay.cpp",
+  "line": 1690,
+  "text": "Save in the game to keep them.",
+  "count": 1,
+  "fn": "cheats"
+ },
+ {
+  "id": 160,
+  "file": "overlay.cpp",
+  "line": 1712,
+  "text": "Story cheats (can break story events; use a spare save file)",
+  "count": 1,
+  "fn": "cheats"
+ },
+ {
+  "id": 161,
+  "file": "overlay.cpp",
+  "line": 1764,
+  "text": "Tap a controller button, or hold one and press another. Right-click to clear; Delete, Backspace or X clears the focused binding. Home is listed under Settings. Select used as a hold button is reserved for combinations.",
+  "count": 1,
+  "fn": "tab_shortcuts"
+ },
+ {
+  "id": 162,
+  "file": "overlay.cpp",
+  "line": 1765,
+  "text": "Reset to defaults",
+  "count": 1,
+  "fn": "tab_shortcuts"
+ },
+ {
+  "id": 163,
+  "file": "overlay.cpp",
+  "line": 1814,
+  "text": "%s%s",
+  "count": 1,
+  "fn": "tab_shortcuts"
+ },
+ {
+  "id": 164,
+  "file": "overlay.cpp",
+  "line": 1986,
+  "text": "List view",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 165,
+  "file": "overlay.cpp",
+  "line": 1987,
+  "text": "A plain table of all inputs instead of the controller drawing",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 166,
+  "file": "overlay.cpp",
+  "line": 1992,
+  "text": "At the title screen, automatically choose the configured Wii U controller.",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 167,
+  "file": "overlay.cpp",
+  "line": 2014,
+  "text": "Which physical button does each Wii U action. By position: right is A, bottom B, top X and left Y. By label: A does A, B does B, X does X and Y does Y. Automatic reads the connected pad's labels. Button prompts below chooses how those buttons look in the game. Only the four face bindings change.",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 168,
+  "file": "overlay.cpp",
+  "line": 2039,
+  "text": "How the game's button icons look, with any face-button setting. Xbox and PlayStation show the button bound to each Wii U action. By position on Xbox, roll shows B and sword shows A. Automatic follows the connected pad; Nintendo keeps the game's look. By label keeps its existing automatic Xbox fallback. Original keeps the game's look. Custom bindings need four distinct face buttons; otherwise the original icons are used.",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 169,
+  "file": "overlay.cpp",
+  "line": 2059,
+  "text": "How prompts name the shoulder buttons and triggers. Automatic follows the button prompts: LB / RB / LT / RT with the Xbox look, L1 / R1 / L2 / R2 with the PlayStation shapes, the game's L / R / ZL / ZR otherwise. A fixed choice applies with any face buttons setting.",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 170,
+  "file": "overlay.cpp",
+  "line": 2067,
+  "text": "Coloured face buttons",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 171,
+  "file": "overlay.cpp",
+  "line": 2071,
+  "text": "Green A, red B, blue X and yellow Y in the Xbox look; blue cross, red circle, pink square and green triangle with the PlayStation shapes. Off: the game's white buttons (in the Xbox positions while the face buttons are by label).",
+  "count": 1,
+  "fn": "tab_controls"
+ },
+ {
+  "id": 172,
+  "file": "overlay.cpp",
+  "line": 2240,
+  "text": "Console language (applies on the next start)",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 173,
+  "file": "overlay.cpp",
+  "line": 2242,
+  "text": "The game picks its text language from the console language. Its language packs (content/Common/Pack) were not found, so every language is offered; the game shows only those its disc carries.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 174,
+  "file": "overlay.cpp",
+  "line": 2245,
+  "text": "The game picks its text language from the console language. This game (%s) contains %s; the other languages need a disc that carries them.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 175,
+  "file": "overlay.cpp",
+  "line": 2269,
+  "text": "Japanese language sources are untested so far: report what looks wrong.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 176,
+  "file": "overlay.cpp",
+  "line": 2274,
+  "text": "WWHD_LANGUAGE=%s is set for this start and takes precedence.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 177,
+  "file": "overlay.cpp",
+  "line": 2276,
+  "text": "%s is not on this disc: the game runs in %s.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 178,
+  "file": "overlay.cpp",
+  "line": 2279,
+  "text": "%s (%s) is saved but its language source is missing (%s): the game runs in %s.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 179,
+  "file": "overlay.cpp",
+  "line": 2283,
+  "text": "%s is saved but is not on this disc: the game runs in %s. Choose one of the languages above.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 180,
+  "file": "overlay.cpp",
+  "line": 2286,
+  "text": "%s is saved. Restart the game to apply it: the game reads the console language only when it starts.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 181,
+  "file": "overlay.cpp",
+  "line": 2289,
+  "text": "About",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 182,
+  "file": "overlay.cpp",
+  "line": 2290,
+  "text": "The Legend of Zelda: The Wind Waker HD - native port (%s host, %s renderer)",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 183,
+  "file": "overlay.cpp",
+  "line": 2293,
+  "text": "%s (%s), %s build: the game code runs from the decompiled source (experimental)",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 184,
+  "file": "overlay.cpp",
+  "line": 2297,
+  "text": "Settings overlay: hold Minus for half a second (a short Minus goes to the game). B or Minus closes. L / R switch tabs. The game keeps running and sees no input while this menu is open.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 185,
+  "file": "overlay.cpp",
+  "line": 2300,
+  "text": "Settings overlay: hold Select / press Home on a controller. B closes. L / R switch tabs. The game keeps running and sees no input while this menu is open.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 186,
+  "file": "overlay.cpp",
+  "line": 2303,
+  "text": "When the game asks for text (your name), a text window appears over the game: D-pad / left stick choose a key, A types it, B deletes, X adds a space, Y is Shift, L / R switch between letters, accents and symbols, Start confirms.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 187,
+  "file": "overlay.cpp",
+  "line": 2308,
+  "text": "Settings overlay: Esc or F1 (Fn+F1 on most Mac keyboards), Cmd+, or Settings... in the app menu, or hold Select / press Home on a controller. With a captured mouse, the first Esc frees the mouse. Esc, F1 or B closes. ",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 188,
+  "file": "overlay.cpp",
+  "line": 2311,
+  "text": "Settings overlay: Esc or F1, or hold Select / press Home on a controller. With a captured mouse, the first Esc frees the mouse. Esc, F1 or B closes. ",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 189,
+  "file": "overlay.cpp",
+  "line": 2315,
+  "text": "When the game asks for text (your name), a text window appears over the game: type on the keyboard (Enter = OK, Esc = Cancel), click the on-screen keys, or use a controller: D-pad / left stick choose a key, A types it, B deletes, X adds a space, Y is Shift, L / R switch between letters, accents and symbols, Start confirms.",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 190,
+  "file": "overlay.cpp",
+  "line": 2320,
+  "text": "Built with Dear ImGui %s (MIT License, Omar Cornut and contributors).",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 191,
+  "file": "overlay.cpp",
+  "line": 2321,
+  "text": "The world editor's handles use ImGuizmo (MIT License, Cedric Guillemet).",
+  "count": 1,
+  "fn": "tab_about"
+ },
+ {
+  "id": 192,
+  "file": "overlay.cpp",
+  "line": 2340,
+  "text": "%.0f fps   %.1f ms (worst %.1f)",
+  "count": 1,
+  "fn": "perf_window"
+ },
+ {
+  "id": 193,
+  "file": "overlay.cpp",
+  "line": 2341,
+  "text": "Average %.1f fps   %.1f logic steps/s",
+  "count": 1,
+  "fn": "perf_window"
+ },
+ {
+  "id": 194,
+  "file": "overlay.cpp",
+  "line": 2366,
+  "text": "%s  %gx  %s",
+  "count": 1,
+  "fn": "perf_window"
+ },
+ {
+  "id": 195,
+  "file": "overlay.cpp",
+  "line": 2369,
+  "text": "in-between frames drawn: %.0f%%",
+  "count": 1,
+  "fn": "perf_window"
+ },
+ {
+  "id": 196,
+  "file": "overlay.cpp",
+  "line": 2378,
+  "text": "Master volume",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 197,
+  "file": "overlay.cpp",
+  "line": 2383,
+  "text": "Mute##volume",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 198,
+  "file": "overlay.cpp",
+  "line": 2385,
+  "text": "Default##volume",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 199,
+  "file": "overlay.cpp",
+  "line": 2386,
+  "text": "Master volume for the game's sound and mod audio. Applies immediately and is remembered for the next start.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 200,
+  "file": "overlay.cpp",
+  "line": 2388,
+  "text": "WWHD_AUDIO_VOLUME=%s is set for this start and takes precedence; changes here are not saved.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 201,
+  "file": "overlay.cpp",
+  "line": 2391,
+  "text": "GamePad sounds through main speakers",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 202,
+  "file": "overlay.cpp",
+  "line": 2395,
+  "text": "GamePad sounds volume",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 203,
+  "file": "overlay.cpp",
+  "line": 2399,
+  "text": "Play sounds from the GamePad speaker through your main speakers during TV play. Applies immediately and is remembered. Master volume also applies.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 204,
+  "file": "overlay.cpp",
+  "line": 2401,
+  "text": "GamePad audio test overrides are set for this start; overridden preferences are not saved.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 205,
+  "file": "overlay.cpp",
+  "line": 2406,
+  "text": "Restart the game after changing Speakers.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 206,
+  "file": "overlay.cpp",
+  "line": 2409,
+  "text": "Surround 5.1 unavailable on this output. Using stereo; restart after connecting a 5.1 device.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 207,
+  "file": "overlay.cpp",
+  "line": 2411,
+  "text": "Output device changed. Audio is muted; restart the game to use the current device.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 208,
+  "file": "overlay.cpp",
+  "line": 2412,
+  "text": "Current output: %s",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 209,
+  "file": "overlay.cpp",
+  "line": 2414,
+  "text": "Speaker test: %s",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 210,
+  "file": "overlay.cpp",
+  "line": 2415,
+  "text": "Stop speaker test",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 211,
+  "file": "overlay.cpp",
+  "line": 2417,
+  "text": "Test speakers",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 212,
+  "file": "overlay.cpp",
+  "line": 2419,
+  "text": "Plays each active channel in turn at a low level. Subwoofer uses an 80 Hz tone.",
+  "count": 1,
+  "fn": "tab_audio"
+ },
+ {
+  "id": 213,
+  "file": "overlay_switch.cpp",
+  "line": 451,
+  "text": "Debug server",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 214,
+  "file": "overlay_switch.cpp",
+  "line": 464,
+  "text": "Development only. From the next start, the game listens on port 6543 of the local network\nfor tools/switch/wwhd_debug.py (logs, files, screenshots, warps, restart), with NO password:\nanyone on the same network can use it. Leave it off otherwise. See docs/debug-server.md.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 215,
+  "file": "overlay_switch.cpp",
+  "line": 467,
+  "text": "Running now on port %d.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 216,
+  "file": "overlay_switch.cpp",
+  "line": 468,
+  "text": "Applies at the next start.",
+  "count": 2,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 217,
+  "file": "overlay_switch.cpp",
+  "line": 470,
+  "text": "Draw optimizations (A/B test)",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 218,
+  "file": "overlay_switch.cpp",
+  "line": 500,
+  "text": "Turn them off and on again in the same spot: the log marks each change with its frame.\nNot saved: they are on again at the next start.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 219,
+  "file": "overlay_switch.cpp",
+  "line": 502,
+  "text": "Shaders",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 220,
+  "file": "overlay_switch.cpp",
+  "line": 519,
+  "text": "How many threads compile the shaders the game is waiting for (a new place, an item seen for the\nfirst time). Not saved.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 221,
+  "file": "overlay_switch.cpp",
+  "line": 540,
+  "text": "Issue #49: what a draw does while its shader compiles. Saved. The log's [shader-wait] lines say how\nlong it waited.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 222,
+  "file": "overlay_switch.cpp",
+  "line": 543,
+  "text": "Performance tests",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 223,
+  "file": "overlay_switch.cpp",
+  "line": 548,
+  "text": "Test: the game's Miiverse thread (Tingle Bottle and Miiverse requests, which always fail here) stops\ninstead of running a step every millisecond. Measured: no change in fps or\nmain-thread time in the four Outset views. Not saved: off at the next start.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 224,
+  "file": "overlay_switch.cpp",
+  "line": 552,
+  "text": "Controller and screen (test)",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 225,
+  "file": "overlay_switch.cpp",
+  "line": 576,
+  "text": "For testing (not offered to players). GamePad, single screen: play in Off-TV Play from the\ntitle screen on, no controller choice, Minus the item menu. Wii U GamePad and Pro Controller:\nthe game as on the Wii U (TV play, its controller choice); between those two the choice applies\nat once, to or from the single screen from the next start.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 226,
+  "file": "overlay_switch.cpp",
+  "line": 589,
+  "text": "ZL + ZR + Minus switches between them while playing. On the GamePad screen the touch\nscreen works as the GamePad's (items, map). With the Pro Controller chosen above, the GamePad\npicture is drawn only while it is shown (test: what the game puts there in that mode).",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 227,
+  "file": "overlay_switch.cpp",
+  "line": 595,
+  "text": "While the TV picture is shown, the GamePad's (items, map) also appears small in the\nbottom right corner, and the touch screen works inside it. Only with the GamePad chosen above.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 228,
+  "file": "overlay_switch.cpp",
+  "line": 598,
+  "text": "Diagnostics",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 229,
+  "file": "overlay_switch.cpp",
+  "line": 606,
+  "text": "Now: %s (%s).",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 230,
+  "file": "overlay_switch.cpp",
+  "line": 613,
+  "text": "Every 5 s the log says where the game's main thread spends its time in the runtime ([main] lines).\nSaved: it also starts with the game when on.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 231,
+  "file": "overlay_switch.cpp",
+  "line": 617,
+  "text": "Every 5 s the log says each game thread's share of its core ([sched] lines).\nNot saved: off at the next start.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 232,
+  "file": "overlay_switch.cpp",
+  "line": 624,
+  "text": "Writes the next frame's pictures to sdmc:/switch/wwhd/captures for a picture that\ngoes wrong; the game freezes for a few seconds meanwhile. Off: no accidental captures.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 233,
+  "file": "overlay_switch.cpp",
+  "line": 632,
+  "text": "Save performance report",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 234,
+  "file": "overlay_switch.cpp",
+  "line": 668,
+  "text": "Where the renderer spends its time over the last few seconds, as text for a bug report:\nturn on \"Render profiler (slower)\", play in the spot, then save. File in sdmc:/switch/wwhd/logs/.",
+  "count": 1,
+  "fn": "tab_developer"
+ },
+ {
+  "id": 235,
+  "file": "guest_builtin_ui.cpp",
+  "line": 48,
+  "text": "Code mods in this build",
+  "count": 1,
+  "fn": "draw"
+ }
+]

@@ -2,6 +2,7 @@
 // offscreen integration fixture.
 #pragma once
 #include "../mods/packages.h"
+#include "../platform/host.h"  // (this fork v3) pause_register
 #include "../mods/setup_run.h"
 #include "imgui.h"
 #include "../mods/code_mods.h"
@@ -25,6 +26,7 @@ inline bool start_setup(const std::string& id,const mods::catalogue::Step& step)
     if(setup_worker.thread.joinable())setup_worker.thread.join();
     setup_worker.running=true;setup_worker.id=id;setup_worker.error.clear();setup_worker.output.clear();
     setup_worker.thread=std::thread([id,step] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
         auto& setup_worker=setup_work();
         std::string error,output;
         if(step.type=="build_guest_mod")mods::packages::prepare_guest(id,error);

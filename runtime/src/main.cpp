@@ -20,6 +20,7 @@
 #include "mods/mod_hash.h"
 #include "randomizer_identity.h"
 #include "platform/host.h"
+#include "platform/debug_switch.h"  // (this fork v3) the game's own exit goes through the host loop
 #include "platform/appimage_notice.h"
 #include "platform/start_folder.h"
 #include "savestate.h"
@@ -65,6 +66,7 @@
 #include "mods/mods.h"
 #include "platform/https.h"
 #include "mods/packages.h"
+#include "mods/guest_builtin.h"
 #include "mods/save_backup.h"
 #include "mods/save_folder.h"
 #include "runtime.h"
@@ -736,6 +738,9 @@ int main(int argc, char** argv) {
     mods::cemu::set_vulkan(render::requested()==render::Api::Vulkan);
     mods::content::set_game_root(config::game_dir);  // loose imports (fan translations) find their game path
     mods::packages::set_code_mod_support(guestmods::hooks_built() && mods::code::enabled());
+    // (this fork) the mods compiled into the game code (build/guest-mods/registry.c): the mod manager asks
+    // this table, so a second copy of one in ModManager/Mods is ignored instead of built and refused
+    mods::packages::set_builtin_query(&guestbuiltin::has);
     // game code with mod hooks while the code-mod setting is off: guest code mods stay unloaded, the port's own
     // hooked services (story mods, the editor's live edits) still run; without hooks guestmods::init says so
     if (guestmods::hooks_built() && !mods::code::enabled())
@@ -865,9 +870,17 @@ int main(int argc, char** argv) {
     static LoadedModule mod = m;
     static uint32_t args = argv_arr;
     std::thread([] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
         threads::run_main(mod, 1, args);
         LOG("[boot] game main thread returned");
+#ifdef __SWITCH__
+        // (this fork v3) was std::exit(0): __appExit ran on this thread while the host loop kept
+        // running against it (padUpdate during hidExit — the crash family). The soft request ends
+        // the host loop, and run_main_loop's shutdown pauses everything before the services close.
+        debug_switch::request_quit_soft();
+#else
         std::exit(0);
+#endif
     }).detach();
     render::run_main_loop();
     return 0;

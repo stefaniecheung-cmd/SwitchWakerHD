@@ -33,6 +33,13 @@
 #include "widgets.h"
 #include "gamepad_nav.h"
 #include "perf_average.h"
+#ifdef WWHD_ZH_UI
+#include "../platform/zh_tr.h"  // (this fork) the Chinese interface's table
+#endif
+
+#ifdef __SWITCH__
+#include <switch.h>  // (this fork) svcExitProcess: the atomic process exit
+#endif
 #ifdef __ANDROID__
 #include "android_telemetry.h"
 #include <SDL3/SDL_system.h>
@@ -352,6 +359,44 @@ void setup_style() {
 void setup_fonts() {
     ImGuiIO& io = ImGui::GetIO();
     if (const ext::FontLoader& load = ext::font_loader(); load && load(io)) return;  // the platform's (extensions.h)
+#ifdef WWHD_ZH_UI
+    // (this fork) the Chinese interface: a system CJK font first (zh_table.inc needs the glyphs); the Latin
+    // fonts below have none, so the texts would come out as boxes. WWHD_UI_EN=1 keeps the English interface.
+    if (!wwhd_zh_forced_english()) {
+        static const char* const cjk[] = {
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/source-han-sans/SourceHanSansSC-Regular.otf",
+            "/usr/share/fonts/opentype/adobe-source-han-sans/SourceHanSansSC-Regular.otf",
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "/usr/share/fonts/wenquanyi/wqy-microhei/wqy-microhei.ttc",
+            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+            "/usr/share/fonts/truetype/arphic/uming.ttc",
+        };
+        ImFontConfig cfg;  // 1.92 rasterizes glyphs on demand: no GlyphRanges needed
+        for (const char* path : cjk) {
+            if (FILE* f = fopen(path, "rb")) {
+                fclose(f);
+                // a .ttc holds several faces (Noto Sans CJK: JP, KR, SC, TC...): try the simplified Chinese
+                // one (2) first, then the first face
+                const size_t n = std::strlen(path);
+                const bool ttc = n > 4 && std::strcmp(path + n - 4, ".ttc") == 0;
+                for (int face = ttc ? 2 : 0; face >= 0; face -= 2) {
+                    cfg.FontNo = face;
+                    if (io.Fonts->AddFontFromFileTTF(path, 17.0f, &cfg)) {
+                        LOG("[overlay] font %s (Chinese, face %d)", path, face);
+                        return;
+                    }
+                    if (!ttc) break;
+                }
+            }
+        }
+        LOG("[overlay] no CJK font found: install fonts-noto-cjk (the Chinese texts need one)");
+    }
+#endif
     static const char* const candidates[] = {
 #if defined(__APPLE__)
         "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
@@ -3334,8 +3379,26 @@ void quit_row(bool& open) {
         return;
     }
     LOG("[quit] answer: Quit");
+#ifdef __SWITCH__
+    // (this fork v3) the host loop ends and run_main_loop performs the orderly shutdown: every
+    // other thread paused (svcSetThreadActivity), then std::_Exit — __appExit closes the services
+    // with nothing running against them, and libnx jumps back into hbmenu's stack. THAT is the
+    // exit homebrew is designed for (envGetExitFuncPtr, crt0's return path): the process stays
+    // alive and the system shows no error. The two earlier attempts both failed:
+    //   - std::_Exit right here (before the pause): __appExit tore hid/audout/vi/fsdev down under
+    //     the still-running threads — padUpdate 2345-0008, deko3d swap 2359-0001, fsdev races.
+    //   - svcExitProcess: atomic, but it KILLS hbmenu's own process (the NRO runs inside it); a
+    //     self-dead applet is reported as "software was closed" even with result 0 — the log ended
+    //     cleanly and no crash report existed, yet the dialog appeared (07:25/07:46 sessions).
+    log_flush();  // the batched queue: LOG above (and any line of the last 250 ms) must reach the
+                  // card before the writer thread is paused
+    fflush(stderr);
+    hostui::quit();  // the loop's condition sees it within a frame; the render thread (this one)
+                     // parks at its next swap and everything else is paused in the shutdown
+#else
     // posted: the settings changes posted before (each one saved as it is made) are done first
     hostui::post([] { hostui::quit(); });
+#endif
 }
 
 void settings_window() {

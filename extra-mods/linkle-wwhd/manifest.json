@@ -1,0 +1,13 @@
+{
+ "format_version": 1,
+ "id": "linkle-wwhd",
+ "name": "Linkle",
+ "version": "1.0.0",
+ "author": "Linka Mod Creator",
+ "description": "Play as Linkle: her model (permanent_3d.pack), Demo01.szs, the LinkRM stage room and her voice banks (Cafe/JP, so the USA game keeps its own voices).",
+ "game_id": "wwhd",
+ "kind": "content",
+ "minimum_manager_version": "1.5.0",
+ "content_dir": "content",
+ "enabled_by_default": true
+}

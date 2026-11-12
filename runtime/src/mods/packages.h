@@ -47,6 +47,12 @@ struct View {
 };
 // Supplied from the running executable marker, never from a saved preference.
 void set_code_mod_support(bool built);
+// (this fork) the mods built into the game code (guest_builtin.h): the runtime that links that list
+// registers it here, so the mod manager never lists or installs a second copy of one. A build that
+// links this file without the list (the mod-manager tests) leaves it unset: nothing is built in.
+using BuiltinQuery=bool(*)(const std::string& id);
+void set_builtin_query(BuiltinQuery query);
+bool builtin_mod(const std::string& id);
 bool has_code_mod_support(); // this executable was built with code-mod support
 bool needs_code_mod_support(const std::string& id); // includes package dependencies
 void initialize(); // metadata only; before the game starts

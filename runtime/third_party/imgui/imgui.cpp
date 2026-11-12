@@ -12995,6 +12995,7 @@ void ImGui::SetTooltip(const char* fmt, ...)
 
 void ImGui::SetTooltipV(const char* fmt, va_list args)
 {
+    fmt = IMGUI_ZH_TR(fmt);  // WWHD: Chinese UI
     if (!BeginTooltipEx(ImGuiTooltipFlags_OverridePrevious, ImGuiWindowFlags_None))
         return;
     TextV(fmt, args);

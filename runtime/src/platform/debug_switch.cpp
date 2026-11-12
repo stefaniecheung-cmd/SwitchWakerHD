@@ -190,6 +190,7 @@ debugsrv::Reply prepare(const debugsrv::Args& a) {
 // "scanbench": shader_scan over the game's files, in a thread (the result in the log: [scan])
 debugsrv::Reply scanbench(const debugsrv::Args&) {
     std::thread([] {
+        host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
         shader_scan::Stats st;
         const auto progs = shader_scan::scan(config::game_dir, st);
         LOG("[scan] %zu files (%.0f MB read in %.1f s), %zu archives, %zu shaders, %zu distinct; %.0f MB inflated in "
@@ -416,6 +417,7 @@ std::atomic<bool> g_stalling{false};
 int g_stallMs = 0, g_stallCount = 0, g_stallGapMs = 0;
 
 void stall_main(void*) {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
     for (int i = 0; i < g_stallCount; ++i) {
         const uint64_t end = armGetSystemTick() + armNsToTicks(uint64_t(g_stallMs) * 1000000);
         while (armGetSystemTick() < end) {}
@@ -565,6 +567,14 @@ bool quit_requested() { return g_quit.load(std::memory_order_relaxed); }
 void request_quit() {
     LOG("[quit] quit requested");
     debugsrv::stop();
+    g_quit = true;
+}
+// (this fork) the menu quit's way out: the host loop ends and run_main_loop performs the orderly
+// shutdown (every thread paused, then std::_Exit back to hbmenu). The debug server's sockets are
+// left open: nothing in __appExit needs them closed, and debugsrv::stop's teardown ran while the
+// game's guest threads were still executing once before (2168-0001).
+void request_quit_soft() {
+    LOG("[quit] quit requested");
     g_quit = true;
 }
 bool running() { return g_running; }

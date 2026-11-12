@@ -634,6 +634,7 @@ bool do_save_fast(int slot, const std::string& destination, std::function<void(b
     else crashrec::on_auto_saved(slot - crashrec::kAutoBase);
     // compress and write in the background; the game continues
     std::thread([slot, h, payload, stage, destination, done = done?done:take_done(slot)] {
+        host::pause_register();  // (this fork v5)
         auto t1 = std::chrono::steady_clock::now();
         bool ok;
         {
@@ -1806,6 +1807,7 @@ void request_full_load(int slot,const std::string&source,std::function<void(bool
     }
     if (g_loading.exchange(true)) {message("State not loaded: another state is being loaded");result.complete(false,"another state is being loaded");return;}
     try {std::thread([slot,source,result] {
+        host::pause_register();  // (this fork v5)
         try {
         auto t0 = std::chrono::steady_clock::now();
         std::string why;

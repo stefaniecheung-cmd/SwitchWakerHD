@@ -174,6 +174,7 @@ void write_counts(const char* samplesPath, const std::vector<unsigned long long>
 }
 
 void sampler_main(void*) {
+    host::pause_register();  // (this fork v5) the orderly shutdown pauses this thread like every other one
     const int n = g_count.load();
     char path[96];
     FILE* out = open_samples("prof", n, path, sizeof path);

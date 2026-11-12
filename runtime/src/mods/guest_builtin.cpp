@@ -30,6 +30,15 @@ namespace guestbuiltin {
 static std::map<std::string, std::string> g_status;  // load()'s outcome per mod: "" loaded or switched off
 static std::vector<std::string> g_loaded;             // the mods load() installed
 
+// (this fork) the on/off switch the Mods tab shows first in each mod: options.json's own key, so it sits
+// with the mod's other choices. Built-in mods were all installed unconditionally, and the two minimaps
+// draw in the same corner: picking one means turning the other off. Absent = on (as before).
+static const char kEnabledKey[] = "$enabled";
+static bool enabled_in(const mods::json::Value& options) {
+    const mods::json::Value& v = options.get(kEnabledKey);
+    return v.type != mods::json::Value::Bool || v.boolean;
+}
+
 static std::string read_file(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
     return in ? std::string{std::istreambuf_iterator<char>(in), {}} : std::string();
@@ -38,8 +47,11 @@ static std::string mods_dir() { return host::config_dir() + "/mods"; }
 static std::string mod_dir(const char* id) { return mods_dir() + "/" + id; }  // its prepared data (data/)
 
 #if WWHD_GUEST_BUILTIN
+// The table comes from registry.c, compiled with the game code (CMakeLists.txt: build/guest-mods/registry.c
+// when it exists; the installer compiles sdk/guest-mods into the player's game code). A strong reference:
+// an undefined weak one would not pull registry.o out of libgamecode.a, and the mods would silently never load.
 static const WWHDGuestBuiltin* begin() { return g_guest_builtin; }
-static const WWHDGuestBuiltin* end() { return g_guest_builtin + g_guest_builtin_count; }
+static const WWHDGuestBuiltin* end() { return g_guest_builtin ? g_guest_builtin + g_guest_builtin_count : nullptr; }
 #else
 static const WWHDGuestBuiltin* begin() { return nullptr; }
 static const WWHDGuestBuiltin* end() { return nullptr; }
@@ -177,8 +189,7 @@ bool hooks_checked(const WWHDGuestModuleV1& m, std::string& error) {
 }
 
 void load(const Install& install) {
-    if (begin() == end()) return;
-    if (!g_mod_hook_count) {
+    if (begin() == end()) return;    if (!g_mod_hook_count) {
         LOG("[guestmods] the NRO has guest mods but its game code no mod hooks: translate the game again with "
             "build/guest-mods/hooks.txt (WWHD_RECOMP_MOD_HOOKS_ONLY); no guest mod loaded");
         return;
@@ -199,6 +210,11 @@ void load(const Install& install) {
         pkg.heap_size = b->heap_size;
         pkg.options = settings.options;
         std::string error;
+        if (!enabled_in(pkg.options)) {  // (this fork) off in the Mods tab: not installed at all
+            LOG("[guestmods] %s: off in options.json, not loaded", b->id);
+            g_status[b->id] = "";
+            continue;
+        }
         if (!install(pkg, b->base, b->region_size, b->init, error)) {
             LOG("[guestmods] %s %s (built into the NRO) not loaded: %s", b->id, b->version, error.c_str());
             g_status[b->id] = error.empty() ? "not loaded" : error;
@@ -207,6 +223,11 @@ void load(const Install& install) {
             g_loaded.push_back(b->id);
         }
     }
+}
+
+bool has(const std::string& id) {
+    for (const WWHDGuestBuiltin* b = begin(); b != end(); ++b) if (id == b->id) return true;
+    return false;
 }
 
 std::vector<Mod>& list() {
@@ -230,6 +251,21 @@ std::vector<Mod>& list() {
             man = parse_or_null(std::string(bytes.begin(), bytes.end()));
         const mods::json::Value& values = settings.options;
         m.description = man.get("description").string();
+        {   // (this fork) the on/off switch, first in the list: two mods that draw the same thing (the
+            // minimaps) would otherwise both run, one on top of the other
+            Option on;
+            on.id = kEnabledKey;
+            on.name = "Enabled";
+            on.type = "bool";
+            on.value = values.get(kEnabledKey);
+            if (on.value.type != mods::json::Value::Bool) {
+                on.value.type = mods::json::Value::Bool;
+                on.value.boolean = true;  // absent: on, as the mods always were
+            }
+            m.enabled = on.value.boolean;
+            if (!m.enabled) m.status.clear();  // off on purpose, not "not loaded"
+            m.options.push_back(std::move(on));
+        }
         for (const auto& o : man.get("options").array) {
             Option op;
             op.id = o.get("id").string();

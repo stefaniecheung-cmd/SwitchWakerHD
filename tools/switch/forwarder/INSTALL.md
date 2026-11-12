@@ -1,5 +1,9 @@
 # HOME-screen icon (forwarder NSP)
 
+> **这是启动游戏的唯一受支持方式（必需）。** 游戏**只能**通过本 forwarder 图标启动；从 hbmenu / Sphaira
+> 直接运行 `wwhd.nro` 会在退出时崩溃并弹出「软件已关闭」错误窗口（错误码 0xD401，code-memory 卸载竞争）。
+> 请务必先完成下面的安装，再从 HOME 屏的图标启动。
+
 `build/forwarder/wwhd_forwarder.nsp` installs a "Wind Waker HD" icon on the HOME screen: the
 title-screen logo over the boot screen's art, both taken from your dump by `make_icon.py` (else the game's
 own small icon; `--icon` for your own image). Opening it starts `sdmc:/switch/wwhd/wwhd.nro` as an application: all the

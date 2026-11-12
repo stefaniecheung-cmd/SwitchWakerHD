@@ -35,6 +35,7 @@
 #include "../screen_mode.h"
 #include "background_shaders_switch.h"
 #include "debug_switch.h"
+#include "zh_tr.h"  // (this fork) WWHD_ZH: the std::string paths through the zh table
 #include "prepare_graphics_switch.h"
 #include "settings_switch.h"
 #include "shader_wait_switch.h"
@@ -50,7 +51,7 @@ using overlay::set_open;
 // the overlay's widgets (overlay.cpp keeps its own in an unnamed namespace): the same look
 double now_s() { return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count(); }
 void help(const char* text) {
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_ForTooltip)) ImGui::SetTooltip("%s", text);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_ForTooltip)) ImGui::SetTooltip("%s", WWHD_ZH(text));
 }
 void heading(const char* text) {
     ImGui::Spacing();
@@ -63,7 +64,7 @@ void note(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.70f, 0.78f, 0.84f, 1.0f));
-    ImGui::TextWrappedV(fmt, ap);
+    ImGui::TextWrappedV(WWHD_ZH(fmt), ap);
     ImGui::PopStyleColor();
     va_end(ap);
 }
@@ -72,7 +73,7 @@ void warn(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.80f, 0.35f, 1.0f));
-    ImGui::TextWrappedV(fmt, ap);
+    ImGui::TextWrappedV(WWHD_ZH(fmt), ap);
     ImGui::PopStyleColor();
     va_end(ap);
 }
@@ -698,17 +699,25 @@ void tab_developer() {
 }
 
 bool load_font(ImGuiIO& io) {
-    // the console's own font (shared font service), kept by the system: the atlas does not own it
+    // the console's own fonts (shared font service), kept by the system: the atlas does not own them.
+    // This build's interface is Chinese, so the Chinese shared font is loaded too (merge mode: it fills
+    // in the glyphs the standard one has not), and ImGui's dynamic atlas rasterizes each glyph on demand.
     if (R_SUCCEEDED(plInitialize(PlServiceType_User))) {
-        PlFontData font;
-        if (R_SUCCEEDED(plGetSharedFontByType(&font, PlSharedFontType_Standard))) {
+        const PlSharedFontType kOrder[] = {PlSharedFontType_Standard, PlSharedFontType_ChineseSimplified,
+                                           PlSharedFontType_ExtChineseSimplified, PlSharedFontType_ChineseTraditional};
+        int added = 0;
+        for (const PlSharedFontType type : kOrder) {
+            PlFontData font;
+            if (R_FAILED(plGetSharedFontByType(&font, type))) continue;
             ImFontConfig cfg;
             cfg.FontDataOwnedByAtlas = false;
+            cfg.MergeMode = added > 0;
             if (io.Fonts->AddFontFromMemoryTTF(font.address, int(font.size), 17.0f, &cfg)) {
-                LOG("[overlay] font: the system's shared font");
-                return true;
+                LOG("[overlay] font: shared font type %d", int(type));
+                added++;
             }
         }
+        if (added) return true;
     }
     return false;
 }

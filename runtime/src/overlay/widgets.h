@@ -9,9 +9,11 @@ namespace overlay::widgets {
 // a help text shown as a tooltip of the item before
 inline void help(const char* text) {
     if (overlay::tooltip_hovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_ForTooltip)) {
+        // (this fork) the text is passed through "%s" elsewhere, so ImGui's own hook cannot see it:
+        // translate it here, and keep upstream's wrapped tooltip
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(std::max(1.f, std::min(ImGui::GetFontSize()*35.f, ImGui::GetMainViewport()->WorkSize.x-40.f)));
-        ImGui::TextUnformatted(text);
+        ImGui::TextUnformatted(IMGUI_ZH_TR(text));
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }

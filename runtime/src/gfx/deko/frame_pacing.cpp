@@ -10,6 +10,7 @@
 // Mode 1 (the default) gives the swapchain the game's swap interval, so the display holds every frame at least
 // two vblanks at 30 fps instead of showing a frame that finished early after one (docs/frame-pacing-plan.md).
 #include "frame_pacing.h"
+#include "../platform/host.h"  // (this fork v3) pause_register: the orderly shutdown's thread registry
 
 #include <switch.h>
 
@@ -65,6 +66,7 @@ std::atomic<uint32_t> g_interval{1};         // the swapchain's swap interval no
 std::atomic<bool> g_vsyncOk{false};
 
 void vblank_thread(void* arg) {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread (vi event)
     Event* ev = static_cast<Event*>(arg);
     for (;;) {
         if (R_FAILED(eventWait(ev, 200'000'000ull))) continue;  // (no vblank in 200 ms: asleep, or the display off)

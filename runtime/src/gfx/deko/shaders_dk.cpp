@@ -707,6 +707,9 @@ void compile_job(Job& job, JobResult& r) {
 int foreground_mask() { return cores::core3() ? 0xD : 0x5; }
 
 void worker_main(void*) {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
+    // cores 0 and 2, and 3 when the process has it: core 1 runs the main thread and the guest threads
+    // placed there (WWHD_CORE_LAYOUT)
     svcSetThreadCoreMask(CUR_THREAD_HANDLE, 2, foreground_mask());
     host::set_thread_name("dk shader compiler");
     // (this fork) a heap of its own: Mesa allocates constantly, and the compile threads queued on newlib's one lock
@@ -787,6 +790,7 @@ void worker_main(void*) {
 // (this fork) a helper compile thread: the most wanted job a draw asked for, whenever its index is below the
 // threads chosen and the main worker is ready (uam initialised)
 void helper_main(void* arg) {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread;
     const int index = int(reinterpret_cast<intptr_t>(arg));
     svcSetThreadCoreMask(CUR_THREAD_HANDLE, 2, foreground_mask());
     host::set_thread_name("dk shader helper");

@@ -8,10 +8,17 @@ translated to C ahead of time by a static recompiler, the Cafe OS libraries the 
 reimplemented natively, and its GX2 graphics are drawn with deko3d, the Switch's own GPU API. There
 is no CPU emulation and no GPU command emulation.
 
-It is a fork of [ZeldaWWHDRecomp](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp), which runs
-the same recompilation on macOS, Linux, Windows and Android. Those platforms still build from this
-repository; their instructions are in the upstream README, kept as
-[docs/upstream-README.md](docs/upstream-README.md). How the recompilation works:
+The fork lineage (GitHub's fork chain):
+
+1. **[ZeldaWWHDRecomp](https://github.com/ZeldaWWHDRecomp/ZeldaWWHDRecomp)** — the main project. It runs
+   the same recompilation on macOS, Linux, Windows and Android.
+2. **[centollOS/SwitchWakerHD](https://github.com/centollOS/SwitchWakerHD)** — the same author, adding the
+   native Switch port (libnx + deko3d, an `.nro` that runs the recompiled game directly).
+3. **This fork** (`stefaniecheung-cmd/SwitchWakerHD`) — adds a Simplified Chinese UI layer
+   (`zh_tr`/`zh_table.inc`) and a set of Switch delivery fixes (see [CHANGELOG.md](CHANGELOG.md)).
+
+Those desktop platforms still build from this repository; their instructions are in the upstream README,
+kept as [docs/upstream-README.md](docs/upstream-README.md). How the recompilation works:
 [docs/how-it-works.md](docs/how-it-works.md).
 
 ## What you need
@@ -149,10 +156,13 @@ and copy the files.
 
 ### Start the game
 
-- Open the Homebrew Menu **in title mode**: hold **R** while starting any installed game, then pick
-  **SwitchWakerHD**. Opened from the album (applet mode) the game has far too little memory.
-- Or install the HOME-screen icon (forwarder), which always starts it in title mode:
-  [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md).
+> **⚠️ 必须从 forwarder（HOME 屏图标）启动游戏。** 这是唯一受支持的方式。从 hbmenu / Sphaira 直接运行
+> `wwhd.nro`（按住 **R** 进入 title mode，或从相册进入 applet mode）会在退出时崩溃并弹出「软件已关闭」
+> 错误窗口（0xD401）。请先安装 forwarder 并从 HOME 屏图标启动：
+> [tools/switch/forwarder/INSTALL.md](tools/switch/forwarder/INSTALL.md)。
+
+- Install the HOME-screen icon (forwarder) and start the game from its icon on the HOME screen. It always
+  starts the game in title mode with full memory.
 - Controllers act as the Wii U GamePad, in Off-TV Play: the console's screen shows the game at full
   resolution, and its touch screen is the GamePad's. The game goes straight from the title to the save
   list (no controller question) and into play.
@@ -432,6 +442,33 @@ Ideas and findings from other Switch ports (no code taken; each written up in th
 
 If you enjoy this port, the projects above are where the credit belongs. Every component and its
 license: [THIRD_PARTY.md](THIRD_PARTY.md).
+
+## Branches and maintenance
+
+This fork keeps two long-lived branches:
+
+- **`main`** — tracks upstream (`centollOS/SwitchWakerHD`) exactly. Nothing is committed here directly;
+  it only fast-forwards when upstream moves, so an upstream update is a plain `git fetch` + fast-forward.
+- **`zh-desktop`** — the maintenance branch. It is `main` plus this fork's own layer: the Simplified
+  Chinese UI (`runtime/src/platform/zh_tr.{h,cpp}`, `zh_table.inc`, `zhcheck.cpp`) and the Switch
+  delivery fixes (the clean exit, the forwarder requirement, `hd-minimap` removal, the
+  `tools/switch/*` helpers and the `zh-linux-appimage` workflow). All Chinese translation, exit-fix and
+  release work happens here, and every release is tagged from this branch.
+
+**Upstream sync (merge, not rebase):**
+
+```sh
+git fetch upstream                    # upstream = centollOS/SwitchWakerHD
+git checkout main && git merge --ff-only upstream/main && git push origin main
+git checkout zh-desktop && git merge main
+# resolve any conflicts in the fork's own files, then:
+git push origin zh-desktop
+```
+
+The two remotes are `origin` (this fork) and `upstream` (`centollOS/SwitchWakerHD`); the optional
+`upstream-desktop` remote points at `ZeldaWWHDRecomp` for reading the desktop-side history. Because
+`main` is never modified by hand, merging upstream into `zh-desktop` is the only step that can conflict,
+and those conflicts are confined to the fork's own files.
 
 ## How it was made: AI use
 

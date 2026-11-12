@@ -1,0 +1,52 @@
+{
+ "build": "USA",
+ "mods": [
+  {
+   "id": "gc-minimap",
+   "name": "GameCube minimap",
+   "version": "0.3.0",
+   "c_name": "gc_minimap",
+   "data": "C:\\swh\\gc-minimap-work\\data\\gc-minimap",
+   "base": 2130706432,
+   "region": 327680,
+   "heap": 262144,
+   "memory": 13904,
+   "hooks": [
+    "0240EBB0"
+   ],
+   "services": [
+    "wwhd_config_bool",
+    "wwhd_config_float",
+    "wwhd_config_string",
+    "wwhd_hud_register",
+    "wwhd_hud_epoch",
+    "wwhd_logic_step",
+    "wwhd_setting_get",
+    "wwhd_hud_release",
+    "wwhd_hud_texture",
+    "wwhd_file_read",
+    "memset",
+    "wwhd_hud_emit",
+    "wwhd_hud_clip"
+   ]
+  },
+  {
+   "id": "story-notebook",
+   "name": "The Story Notebook",
+   "version": "0.6.1",
+   "c_name": "story_notebook",
+   "data": "C:\\swh\\gc-minimap-work\\data\\story-notebook",
+   "base": 2131034112,
+   "region": 327680,
+   "heap": 262144,
+   "memory": 272,
+   "hooks": [
+    "0240EBB0"
+   ],
+   "services": [
+    "wwhd_quest_state",
+    "wwhd_log_int"
+   ]
+  }
+ ]
+}

@@ -132,6 +132,6 @@ void load_saved_options() {}
 void toggle_drc() {}
 void drc_window_closed() {}
 void tv_fullscreen_changed() {}
-void quit() { debug_switch::request_quit(); }  // Settings > Quit Game: the host loop ends
+void quit() { debug_switch::request_quit_soft(); }  // Settings > Quit Game: the host loop ends
 
 }  // namespace hostui

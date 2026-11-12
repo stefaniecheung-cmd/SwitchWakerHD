@@ -3,6 +3,7 @@
 #include "core_switch.h"
 
 #include <switch.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -47,6 +48,7 @@ static void log_writer_start() {
         pthread_attr_init(&attr);
         pthread_attr_setstacksize(&attr, 64 << 10);
         if (pthread_create(&t, &attr, [](void*) -> void* {
+                host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
                 // above the game's threads (59), like the other host service threads: the log keeps
                 // reaching the SD card while game threads are busy or stuck
                 host::raise_thread_priority();  // and off the main thread's core
@@ -77,13 +79,20 @@ __attribute__((constructor(101))) static void log_sink_install() { log_set_sink(
 
 // From the CPU exception handler (main_switch.cpp): the pending lines and then text, written straight to the
 // files' descriptors. Nothing waits for a lock: the thread that crashed may hold the log's or stdio's.
+// (this fork) The text also goes to logs/crash_latest.txt through its own descriptor: if the session log's
+// file state is what the exception left broken (it can be, when the fault is inside the fsdev/SD write path),
+// the second file is another chance, and both are fsynced so neither waits for the writer thread's flush.
+static int g_crash_fd = -1;
+void crash_log_open() { g_crash_fd = open("logs/crash_latest.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666); }
+
 void log_crash_write(const char* text, size_t n) {
     std::string out;
     if (g_pending_mutex.try_lock()) {
         out.swap(g_log_pending);
         g_pending_mutex.unlock();
     }
-    if (const int fd = fileno(stderr); fd >= 0) {
+    for (const int fd : {fileno(stderr), g_crash_fd}) {
+        if (fd < 0) continue;
         if (!out.empty()) (void)!write(fd, out.data(), out.size());
         (void)!write(fd, text, n);
         fsync(fd);
@@ -110,16 +119,39 @@ extern "C" int __syscall_thread_detach(struct __pthread_t*) { return 0; }
 // (WWHD_GL_THREAD) that way, and that thread runs the GLSL compiler, which needs far more.
 // The link wraps pthread_create (CMakeLists.txt) so such threads get 4 MiB.
 extern "C" int __real_pthread_create(pthread_t*, const pthread_attr_t*, void* (*)(void*), void*);
+// (this fork v5) Every host thread registers here, whoever creates it: pausing only the sites that call
+// pause_register themselves still missed some (report 01793501613 — two threads of the previous run woke up
+// minutes later in code the loader had already unmapped). One shim covers libstdc++'s std::thread, libnx's
+// pthreads and anything a library starts, present or future; a thread that also calls pause_register in its
+// body just registers twice.
+namespace {
+struct ThreadShim {
+    void* (*fn)(void*);
+    void* arg;
+};
+void* thread_shim(void* p) {
+    host::pause_register();
+    ThreadShim s = *static_cast<ThreadShim*>(p);
+    delete static_cast<ThreadShim*>(p);
+    return s.fn(s.arg);
+}
+}  // namespace
 extern "C" int __wrap_pthread_create(pthread_t* thread, const pthread_attr_t* attr, void* (*fn)(void*), void* arg) {
     size_t size = 0;
-    if (attr && pthread_attr_getstacksize(attr, &size) == 0 && size) return __real_pthread_create(thread, attr, fn, arg);
-    pthread_attr_t big;
-    if (attr) big = *attr;
-    else pthread_attr_init(&big);
-    pthread_attr_setstacksize(&big, 4 << 20);
-    int r = __real_pthread_create(thread, &big, fn, arg);
-    if (!attr) pthread_attr_destroy(&big);
-    if (r) LOG("[boot] pthread_create with a 4 MiB stack failed (%d)", r);
+    auto* s = new ThreadShim{fn, arg};  // freed by the thread it starts
+    int r;
+    if (attr && pthread_attr_getstacksize(attr, &size) == 0 && size) {
+        r = __real_pthread_create(thread, attr, thread_shim, s);
+    } else {
+        pthread_attr_t big;
+        if (attr) big = *attr;
+        else pthread_attr_init(&big);
+        pthread_attr_setstacksize(&big, 4 << 20);
+        r = __real_pthread_create(thread, &big, thread_shim, s);
+        if (!attr) pthread_attr_destroy(&big);
+        if (r) LOG("[boot] pthread_create with a 4 MiB stack failed (%d)", r);
+    }
+    if (r) delete s;
     return r;
 }
 // newlib's C11 threads define thrd_success as 4; Mesa (switch-mesa, built against newlib's <threads.h>
@@ -147,6 +179,16 @@ constexpr GuestRange kGuestRanges[] = {
     {mem::kFgBucket, mem::kFgBucketSize},
     {mem::kMem1, mem::kMem1Size},
 };
+// (this fork v6) what init_memory mapped, so the exit can give it back. When we return, the loader
+// (hbl) unmaps our three segments and then maps the next NRO wherever its own bookkeeping of the
+// code-memory region says there is room — and that bookkeeping has never heard of this window. A
+// mapping of ours left behind is a hole it cannot see: reports 01793503748 / 01793503962 aborted in
+// hbl itself (result 0xD401, InvalidMemoryState, the error its own code names for a code-memory
+// syscall that finds the wrong state). Everything mapped here goes back before we hand over.
+struct GuestMap { void* dst; void* backing; uint32_t size; };
+GuestMap g_guestMaps[std::size(kGuestRanges) + 1];
+void* g_guestWindow = nullptr;
+VirtmemReservation* g_guestReservation = nullptr;  // (v7) the 4 GiB address-space reservation, released on the way out
 }  // namespace
 void core_switch::init_memory() {
     if (!envIsSyscallHinted(0x77) || !envIsSyscallHinted(0x73))
@@ -155,7 +197,8 @@ void core_switch::init_memory() {
     Handle self = envGetOwnProcessHandle();
     virtmemLock();
     void* window = virtmemFindCodeMemory(0x100000000ull, 0x10000);
-    if (!window || !virtmemAddReservation(window, 0x100000000ull)) {
+    g_guestReservation = window ? virtmemAddReservation(window, 0x100000000ull) : nullptr;
+    if (!window || !g_guestReservation) {
         virtmemUnlock();
         fatal("cannot reserve a 4 GiB guest address window");
     }
@@ -178,9 +221,87 @@ void core_switch::init_memory() {
         if (R_FAILED(rc)) fatal("svcMapProcessCodeMemory %08X failed (0x%X)", r.start, rc);
         rc = svcSetProcessMemoryPermission(self, (u64)dst, r.size, Perm_Rw);
         if (R_FAILED(rc)) fatal("svcSetProcessMemoryPermission %08X failed (0x%X)", r.start, rc);
+        if (i < std::size(g_guestMaps)) g_guestMaps[i] = {dst, backing, r.size};
         total += r.size;
     }
+    g_guestWindow = window;
     ppc_mem_base_var = (uint8_t*)window;
     LOG("[mem] guest window at %p, %llu MiB backed", window, (unsigned long long)(total >> 20));
     log_heap("after the guest memory");
+}
+// (this fork v6) called when the host loop has ended and every other thread is frozen: unmap the
+// guest ranges (svcUnmapProcessCodeMemory needs the same destination/source pair the map used) and
+// free their heap pages, so the code-memory region the loader searches is empty of us again. Nothing
+// runs from these pages and no frozen thread holds them: guest memory is data, our code is in the
+// NRO's own segments, which the loader unmaps itself.
+void core_switch::release_memory() {
+    if (!g_guestWindow) return;
+    const Handle self = envGetOwnProcessHandle();
+    for (const GuestMap& m : g_guestMaps) {
+        if (!m.dst || !m.backing) continue;
+        const Result rc = svcUnmapProcessCodeMemory(self, (u64)m.dst, (u64)m.backing, m.size);
+        LOG("[exit] guest %p (%llu MiB): unmap %s (0x%X)", m.dst, (unsigned long long)(m.size >> 20),
+            R_SUCCEEDED(rc) ? "ok" : "FAILED", rc);
+    }
+    for (GuestMap& m : g_guestMaps) {
+        if (m.backing) free(m.backing);
+        m = {nullptr, nullptr, 0};
+    }
+    // (v7) release the 4 GiB address-space reservation too, not just the backed mappings. The loader's
+    // own virtmem bookkeeping is separate from ours, but the code-memory region is shared: leaving the
+    // reservation in place left the kernel's view of the region inconsistent, and the loader's next
+    // svcMapProcessCodeMemory answered InvalidMemoryState (0xD401). Give every piece back.
+    if (g_guestReservation) {
+        virtmemLock();
+        virtmemRemoveReservation(g_guestReservation);
+        virtmemUnlock();
+        g_guestReservation = nullptr;
+    }
+    LOG("[exit] guest window %p given back (4 GiB of the code-memory region)", g_guestWindow);
+    g_guestWindow = nullptr;
+    log_heap("after the guest memory was given back");
+}
+// (this fork v7) the quit no longer hands back to the loader (std::_Exit → hbl unmaps us → hbl maps
+// the next NRO): that path re-runs svcMapProcessCodeMemory/svcSetProcessMemoryPermission over a
+// code-memory region the loader's own bookkeeping never reconciled with our 4 GiB guest window, and
+// the loader aborts with InvalidMemoryState (0xD401) — the 11:27/11:29/12:50 exits. The loader itself
+// (Sphaira's hbl, main.c selfExit) quits its applet by asking appletOE to exit and then sleeping until
+// the system closes it: no code-memory work, no "software was closed" dialog (which svcExitProcess, a
+// self-dead applet, gets). Do the same here: request the applet exit, then park forever; the system
+// closes the process from the outside. Reaching here means the host loop ended and every other thread
+// is frozen, so nothing else runs into the teardown.
+void core_switch::request_applet_exit() {
+    // The sm session may already be closed by the time we quit (the hbloader that launched this NRO
+    // tore down its own sm, and ours can have gone stale). hbl's selfExit() calls smInitialize() first
+    // for exactly this reason; smInitialize() is idempotent, so mirror it here.
+    Service applet, proxy, self;
+    Result rc = smInitialize();
+    if (R_FAILED(rc)) { LOG("[exit] applet exit: smInitialize failed 0x%X", rc); log_flush(); svcExitProcess(); }
+    rc = smGetService(&applet, "appletOE");
+    if (R_FAILED(rc)) { LOG("[exit] applet exit: smGetService(appletOE) failed 0x%X", rc); log_flush(); smExit(); svcExitProcess(); }
+    // GetSessionProxy (cmd 0): pass our process handle so the applet controller can act on this applet.
+    const u64 reserved = 0;
+    rc = serviceDispatchIn(&applet, 0, reserved,
+        .in_send_pid = true,
+        .in_num_handles = 1,
+        .in_handles = { envGetOwnProcessHandle() },
+        .out_num_objects = 1,
+        .out_objects = &proxy);
+    if (R_FAILED(rc)) { LOG("[exit] applet exit: GetSessionProxy failed 0x%X", rc); log_flush(); serviceClose(&applet); svcExitProcess(); }
+    // GetSelfController (cmd 1).
+    rc = serviceDispatch(&proxy, 1, .out_num_objects = 1, .out_objects = &self);
+    if (R_FAILED(rc)) { LOG("[exit] applet exit: GetSelfController failed 0x%X", rc); log_flush(); serviceClose(&proxy); serviceClose(&applet); svcExitProcess(); }
+    // Exit (cmd 0): the applet closes itself normally (no error dialog).
+    rc = serviceDispatch(&self, 0);
+    LOG("[exit] applet exit requested: 0x%X", rc);
+    log_flush();  // the log writer thread is frozen by now (shutdown_threads): flush before we park forever
+    serviceClose(&self);
+    serviceClose(&proxy);
+    serviceClose(&applet);
+    if (R_SUCCEEDED(rc)) {
+        // The system is closing us: park until it does. Never svcExitProcess (that is the self-dead
+        // "software was closed" case); if the close never comes the kernel's own timeout ends us.
+        while (true) svcSleepThread(86400000000000ULL);
+    }
+    svcExitProcess();  // last resort: the request failed, prefer an error dialog over a hung applet
 }

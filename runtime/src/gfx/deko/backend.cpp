@@ -15,6 +15,8 @@ extern "C" char* fake_heap_end;  // libnx: the end of the heap malloc grows into
 #include "dk_surfaces.h"
 #include "dk_sync.h"
 #include "frame_pacing.h"  // (this fork, #23) vblank statistics and pacing modes
+#include "../../platform/host.h"  // (this fork v4) shutdown_threads: the orderly shutdown's thread termination
+#include "../../platform/core_switch.h"  // (this fork v6) release_memory: the guest window on the way out
 #include "../../platform/background_shaders_switch.h"  // (this fork) the counter's shader line
 #include "../../platform/thread_sampler.h"  // (this fork) the sampler's hitch mode
 #include "../../platform/saltynx_switch.h"  // (this fork) the overlays' frame rate
@@ -145,6 +147,7 @@ bool g_shaderOk[kShaderCount] = {};
 DkShader g_presentShaders[2];  // the present pass of the game's picture (vertex, fragment)
 bool g_presentOk = false;
 std::atomic<int> g_debugMessages{0};
+std::atomic<bool> g_shuttingDown{false};  // (this fork) the host loop has ended: the render thread parks (swap)
 
 // deko3d's messages. Only the debug library (libdeko3dd, WWHD_DEKO3D_DEBUG_LIB) calls this: its checks of
 // every call, warnings (result DkResult_Success) and errors, after which it traps. The release library calls
@@ -956,6 +959,7 @@ void core_sampler_start() {
         const Result rc = threadCreate(
             &threads[core],
             [](void* arg) {
+                host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
                 CoreIdle& c = g_coreIdle[uintptr_t(arg)];
                 for (;;) {
                     u64 idle = 0;
@@ -1493,6 +1497,14 @@ void check_hitch(uint64_t now) {
 }
 
 void swap() {
+    if (g_shuttingDown.load(std::memory_order_acquire) || debug_switch::quit_requested()) {
+        // (this fork) Quit Game (or the HOME menu's exit): the host loop has ended or is ending and
+        // _Exit follows within milliseconds. Touching the display here is unsafe — a failed
+        // nwindowDequeueBuffer makes deko3d's release library abort with result 2359-0001 (the
+        // system's "software closed" screen; seen when quitting from the settings menu). Park until
+        // _Exit ends the process.
+        for (;;) svcSleepThread(10'000'000ll);
+    }
     const uint64_t start = now_ns();
     check_hitch(start);
     if (R.frame == 120) thread_sampler::start_flagged();  // (this fork) logs/hitch_profile.flag: the hitch mode
@@ -1628,6 +1640,40 @@ void init() {
     input::init();
 }
 
+#ifdef __SWITCH__
+// (this fork v6) the loader's own next steps, tried here while we can still log what they answer.
+// hbl (Sphaira's nx-hbloader, in this same process) breaks with (our base, our size) before it unmaps
+// us and again after, and any failure there is a diagAbortWithResult in hbl itself — that is what the
+// exits of 11:27 and 11:29 ended in (crash reports 01793503748 and 01793503962, both result 0xD401,
+// InvalidMemoryState, from svcBreak / svcSetProcessMemoryPermission on the code-memory region). A
+// notification-only break is harmless to try. The report also lists what is mapped where we are: if
+// the loader's own range for us has the wrong shape, this says so.
+static void log_exit_probe() {
+    for (int i = 0; i < host::g_aliveThreadCount; i++)
+        LOG("[exit] alive %d: tid %llx at +0x%llx (wwhd.elf)", i, host::g_aliveTids[i],
+            host::g_alivePcs[i] ? host::g_alivePcs[i] - (unsigned long long)host::executable_base() : 0ULL);
+    core_switch::release_memory();  // our 4 GiB guest window goes back before the loader takes over
+    const uint64_t base = host::executable_base();
+    uint64_t addr = base, total = 0;
+    for (int i = 0; i < 8; i++) {
+        MemoryInfo info;
+        u32 page = 0;
+        if (R_FAILED(svcQueryMemory(&info, &page, addr)) || info.addr != addr) break;
+        LOG("[exit] memory %p: +%llu MiB, type 0x%X, perm 0x%X", (void*)info.addr,
+            (unsigned long long)(info.size >> 20), info.type, info.perm);
+        total += info.size;
+        addr += info.size;
+        if (total >= (256ULL << 20)) break;
+    }
+    // (this fork v7) do NOT emit the PreUnloadDll break here. The v6 probe did it to see whether the
+    // loader's own unload step would fail, but that break is itself the trigger: Atmosphere's loader
+    // extension sees PreUnloadDll and drives hbl into unmap-then-reload-Sphaira, which races our
+    // code-memory bookkeeping and ends in hbl's diagAbortWithResult(0xD401). v7 no longer hands back
+    // to the loader at all (request_applet_exit asks appletOE to close us), so the probe is pointless.
+    log_flush();
+}
+#endif
+
 void run_main_loop() {
     while (appletMainLoop() && !debug_switch::quit_requested()) {
         input::update();
@@ -1636,10 +1682,40 @@ void run_main_loop() {
         switch_settings::tick();  // CPU / GPU clock overrides set again when the system changed them
         std::this_thread::sleep_for(std::chrono::milliseconds(4));
     }
+    g_shuttingDown.store(true, std::memory_order_release);  // (this fork) the render thread parks before it
     input::stop_rumble();
     LOG("[boot] host loop ended at frame %llu", (unsigned long long)std::atomic_ref<uint64_t>(R.frame).load());
+    log_flush();  // (this fork) the batched queue reaches the card before the writer thread is paused
     fflush(stderr);
+    // (this fork v4) the orderly return to Sphaira/hbmenu. The NRO runs inside the menu's process, so
+    // the exit homebrew is designed for is NOT svcExitProcess: that kills the menu itself, and a
+    // self-dead applet is reported by the system as "software was closed" even with result 0 — exactly
+    // what the 07:25 and 07:46 sessions showed (the log ended cleanly at "answer: Quit", no crash
+    // report, yet the dialog). libnx's own exit path is what we want: std::_Exit → __appExit →
+    // __nx_exit, which jumps into the loader's exit function; hbl then unmaps our NRO and reloads
+    // Sphaira (its default NRO) — process alive, no error screen. But hbl does not clean up after us:
+    // it unmaps our code while anything still executing it dies (report 01793494051, the 08:44
+    // session, crashed exactly there — after the unmap). So the registered threads are frozen in
+    // rounds (svcSetThreadActivity; new creations refused, late entries self-exit), and the main
+    // thread is the only one of ours running when the loader takes over — the state DBI and WIZBOX,
+    // which exit cleanly under Sphaira, are in: no thread of ours can touch the unmapped code.
+    host::shutdown_threads();
+#ifdef __SWITCH__
+    LOG("%s", host::g_shutdownReport);  // (this fork v4a) what the sweep could freeze, for the next crash report
+    log_exit_probe();
+    log_flush();
+    // (v9) request_applet_exit() cannot work from inside our NRO: hbl loads us with
+    // AppletType_SystemApplication, and sm refuses appletOE to a SystemApplication (0x615 NotAllowed);
+    // appletOE belongs to AppletType_Application, which is what the *hbl process itself* is, so only
+    // hbl's own selfExit() can use it. The right quit is therefore the plain libnx exit: hand control
+    // back to hbl (std::_Exit → __appExit → __nx_exit → the loader's exit function), and let hbl —
+    // which now finds a clean code-memory region because release_memory() above gave back our 4 GiB
+    // window *and* its reservation — unmaps us, sees the exit marker, and calls selfExit() to close
+    // the applet normally (no "software was closed" dialog).
     std::_Exit(0);
+#else
+    std::_Exit(0);
+#endif
 }
 
 }  // namespace

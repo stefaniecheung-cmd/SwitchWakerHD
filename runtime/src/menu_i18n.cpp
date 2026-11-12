@@ -1,6 +1,10 @@
 // (this fork) The settings menu's texts in Spanish, Brazilian Portuguese, Italian, German or French (menu_i18n.h).
 #include "menu_i18n.h"
 
+#ifdef WWHD_ZH_UI
+#include "platform/zh_tr.h"  // (this fork) the Chinese table, consulted before the other languages
+#endif
+
 #include <atomic>
 #include <cstring>
 #include <mutex>
@@ -52,6 +56,12 @@ Language language() {
 
 const char* tr(const char* english) {
     if (g_source.load(std::memory_order_relaxed)) language();
+#ifdef WWHD_ZH_UI
+    // (this fork) Chinese first: zh_table.inc holds the menu's English texts, format strings included
+    // ("Install %s"), so the translation happens before textf() fills the conversions in. A text that is
+    // not in the table, or WWHD_UI_EN=1, falls through to the languages below.
+    if (const char* zh = wwhd_zh_tr(english); zh != english) return zh;
+#endif
     const int lang = g_language.load(std::memory_order_relaxed);
     if (lang == kEnglish || !english || !*english) return english;
     std::lock_guard<std::mutex> lk(g_mu);

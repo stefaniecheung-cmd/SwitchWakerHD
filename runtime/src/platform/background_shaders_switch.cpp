@@ -200,6 +200,7 @@ std::vector<shader_scan::Program> load_programs() {
 
 // B on the loading card: play now (its own pad reader; a press once the card has been up 2 s)
 void watch_card_button() {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread;
     while (render::frame_count() < 30) sleep_s(0.2);  // (input is set up by then)
     PadState pad;
     padInitializeDefault(&pad);
@@ -341,7 +342,10 @@ void run(bool firstStart) {
 
 Thread g_thread;
 bool g_firstStart = false;
-void thread_main(void*) { run(g_firstStart); }
+void thread_main(void*) {
+    host::pause_register();  // (this fork v3) the orderly shutdown pauses this thread
+    run(g_firstStart);
+}
 
 std::string start_thread(bool firstStart) {
     if (g_running.exchange(true)) return "already running";

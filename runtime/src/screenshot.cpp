@@ -120,6 +120,7 @@ std::vector<uint8_t> scaled(uint32_t w, uint32_t h, size_t stride, const uint8_t
 }
 
 void worker() {
+    host::pause_register();  // (this fork v5)
     host::set_thread_name("screenshot");
 #ifdef __APPLE__
     pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0);  // background work: the game threads come first
