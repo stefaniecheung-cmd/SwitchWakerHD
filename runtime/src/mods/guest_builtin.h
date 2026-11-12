@@ -19,6 +19,9 @@ Region memory();
 using Install = std::function<bool(const mods::packages::GuestPackage&, uint32_t base, uint32_t reserved,
                                    WWHDGuestInitV1 init, std::string& error)>;
 void load(const Install& install);
+// whether a mod with this id is built into the game code: the mod manager uses it to tell a player who put a
+// copy of a built-in mod into their Mods folder (a library module this port refuses) what is actually going on
+bool has(const std::string& id);
 // a module's hooks are all on functions with the mods' check (WWHD_RECOMP_MOD_HOOKS_ONLY: only the listed ones)
 bool hooks_checked(const WWHDGuestModuleV1& m, std::string& error);
 
